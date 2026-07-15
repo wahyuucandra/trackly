@@ -1,26 +1,46 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useUserList, useUserMutations, useUserForm } from "@/hooks/useUsers";
 import { useGcmList, useAreaMap } from "@/hooks/useGcm";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UsersFilterBar } from "@/components/features/users/UsersFilterBar";
 import { DeleteConfirmModal } from "@/components/features/users/DeleteConfirmModal";
+import { UserFormModal } from "@/components/features/users/UserFormModal";
 import { Pagination } from "@/components/ui/pagination";
 import { VariantBadge } from "@/components/common";
-import { MultiSelect } from "@/components/ui/multiselect";
 import { UserPlus, Edit, Trash2 } from "lucide-react";
 import type { User as UserType } from "@/types";
 
 export default function UsersPage() {
-  const { users: allUsers } = useUserList();
-  const { gcm } = useGcmList();
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "unauthenticated") router.replace("/login");
+  }, [status, router]);
+
+  if (status === "loading") return null;
+
+  const currentUser = session?.user;
+  if (!currentUser || currentUser.role !== "Admin") {
+    router.replace("/");
+    return null;
+  }
+
+  const canManageUsers = currentUser.permissions?.users === true;
+
+  return <UsersPageContent canManageUsers={canManageUsers} />;
+}
+
+function UsersPageContent({ canManageUsers }: { canManageUsers: boolean }) {
+  const { users: allUsers, isLoading } = useUserList();
+  const { gcm, isLoading: gcmLoading } = useGcmList();
   const areaMap = useAreaMap();
   const { createUser, updateUser, deleteUser } = useUserMutations();
-  const { formData, setFormData, selectedAreas, setSelectedAreas, perms, setPerms, resetForm, fillForm, buildPayload, generateUsername } = useUserForm(allUsers);
+  const { formData, setFormData, selectedAreas, setSelectedAreas, perms, setPerms, resetForm, fillForm, setRole, buildPayload, generateUsername } = useUserForm(allUsers);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editUser, setEditUser] = useState<UserType | null>(null);
@@ -81,8 +101,15 @@ export default function UsersPage() {
     } else {
       createUser.mutate(payload);
     }
-    setModalOpen(false);
   };
+
+  // Close modal only on success
+  useEffect(() => {
+    if (createUser.isSuccess || updateUser.isSuccess) {
+      setModalOpen(false);
+      resetForm();
+    }
+  }, [createUser.isSuccess, updateUser.isSuccess]);
 
   const openCreate = () => {
     setEditUser(null);
@@ -96,16 +123,20 @@ export default function UsersPage() {
     setModalOpen(true);
   };
 
+  if (isLoading || gcmLoading) return null;
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold">User Management</h1>
-          <p className="text-muted-foreground text-sm">Mengelola management user dan matrix uam</p>
+          <p className="text-muted-foreground text-sm">Mengelola user</p>
         </div>
-        <Button onClick={openCreate} size="lg" className="gap-2 px-5">
-          <UserPlus className="w-4 h-4" /> Tambah User
-        </Button>
+        {canManageUsers && (
+          <Button onClick={openCreate} size="lg" className="gap-2 px-5">
+            <UserPlus className="w-4 h-4" /> Tambah User
+          </Button>
+        )}
       </div>
 
       {/* Filter Bar */}
@@ -151,7 +182,7 @@ export default function UsersPage() {
                       {Object.entries(p || {}).filter(([, v]) => v).map(([k]) => k).join(", ") || "-"}
                     </td>
                     <td className="p-4 text-right">
-                      {u.username !== "admin" ? (
+                      {canManageUsers && u.username !== "admin" ? (
                         <div className="flex gap-1.5 justify-end">
                           <Button variant="outline" size="sm" onClick={() => openEdit(u)} className="px-3">
                             <Edit className="w-3.5 h-3.5" />
@@ -193,7 +224,7 @@ export default function UsersPage() {
                 <p className="text-sm text-muted-foreground mb-3">
                   Akses: {Object.entries(p || {}).filter(([, v]) => v).map(([k]) => k).join(", ") || "-"}
                 </p>
-                {u.username !== "admin" && (
+                {canManageUsers && u.username !== "admin" && (
                   <div className="flex gap-1.5">
                     <Button variant="outline" size="sm" onClick={() => openEdit(u)} className="gap-1.5 px-3">
                       <Edit className="w-3.5 h-3.5" /> Edit
@@ -217,122 +248,23 @@ export default function UsersPage() {
       </div>
 
       {/* User Form Modal */}
-      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="sm:min-w-[550px] p-0 gap-0 overflow-hidden">
-          {/* Header */}
-          <div className="px-6 py-5 border-b border-border bg-secondary/30">
-            <DialogTitle className="text-lg flex items-center gap-2.5">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <UserPlus className="w-5 h-5 text-primary" />
-              </div>
-              {editUser ? "Edit User" : "Tambah User Baru"}
-            </DialogTitle>
-          </div>
-
-          {/* Content */}
-          <div className="px-6 py-5 space-y-4">
-            <div className="flex flex-col gap-3">
-              <div className="sm:col-span-2">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Nama Lengkap</label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => {
-                    const name = e.target.value;
-                    setFormData({ ...formData, name });
-                    if (!editUser) {
-                      setFormData((prev) => ({ ...prev, username: generateUsername(name), name }));
-                    }
-                  }}
-                  placeholder="Nama lengkap"
-                  className="mt-1.5"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Username</label>
-                <Input value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} placeholder="Auto-generated dari nama" disabled className="mt-1.5" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Password {editUser ? "(opsional)" : ""}</label>
-                <Input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} placeholder="password" className="mt-1.5" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Role</label>
-                <Select value={formData.role} onValueChange={(v) => setFormData({ ...formData, role: v ?? "AO" })}>
-                  <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="AO">AO</SelectItem>
-                    <SelectItem value="Admin">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 block">Area</label>
-                <div className="border border-border rounded-xl p-3">
-                  <MultiSelect
-                    label={selectedAreas.length === 0 ? "Pilih Area" : selectedAreas.length === 1 ? (areaMap.get(selectedAreas[0]) || selectedAreas[0]) : `${selectedAreas.length} area`}
-                    options={allAreas}
-                    optionLabels={areaMap}
-                    selected={selectedAreas}
-                    onChange={setSelectedAreas}
-                    placeholder="Cari area..."
-                  />
-                  {selectedAreas.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-3">
-                      {selectedAreas.map((area) => (
-                        <span key={area} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
-                          {areaMap.get(area) || area}
-                          <button
-                            onClick={() => setSelectedAreas((prev) => prev.filter((a) => a !== area))}
-                            className="ml-0.5 hover:text-red-500 transition-colors"
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 block">Akses Menu</label>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { key: "tasks", label: "Tugas", desc: "Lihat & update tugas" },
-                  { key: "programs", label: "Program", desc: "Kelola program" },
-                  { key: "approvals", label: "Verifikasi", desc: "Setujui / tolak" },
-                  { key: "export", label: "Export", desc: "Download laporan" },
-                  { key: "users", label: "Users", desc: "Kelola akun" },
-                ].map(({ key, label, desc }) => (
-                  <div
-                    key={key}
-                    onClick={() => setPerms({ ...perms, [key]: !(perms as Record<string, boolean>)[key] })}
-                    className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
-                      (perms as Record<string, boolean>)[key] ? "bg-primary/5 border-primary/30" : "border-border hover:bg-secondary/50"
-                    }`}
-                  >
-                    <div>
-                      <p className="text-[13px] font-semibold">{label}</p>
-                      <p className="text-[11px] text-muted-foreground">{desc}</p>
-                    </div>
-                    <div className={`w-[38px] h-[22px] rounded-full relative transition-all ${(perms as Record<string, boolean>)[key] ? "bg-primary" : "bg-slate-300"}`}>
-                      <div className="absolute w-[18px] h-[18px] rounded-full bg-white top-[2px] shadow-sm transition-all" style={{ left: (perms as Record<string, boolean>)[key] ? "18px" : "2px" }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="px-6 py-4 border-t border-border bg-secondary/20 flex items-center justify-end gap-3">
-            <Button variant="outline" onClick={() => setModalOpen(false)} className="px-5">Batal</Button>
-            <Button onClick={handleSave} disabled={createUser.isPending || updateUser.isPending} className="px-5">
-              {editUser ? "Simpan Perubahan" : "Buat User"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <UserFormModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        editUser={editUser}
+        formData={formData}
+        setFormData={setFormData}
+        selectedAreas={selectedAreas}
+        setSelectedAreas={setSelectedAreas}
+        perms={perms}
+        setPerms={setPerms}
+        setRole={setRole}
+        generateUsername={generateUsername}
+        allAreas={allAreas}
+        areaMap={areaMap}
+        onSave={handleSave}
+        isPending={createUser.isPending || updateUser.isPending}
+      />
 
       {/* Delete Confirm Modal */}
       <DeleteConfirmModal

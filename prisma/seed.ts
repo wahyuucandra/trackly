@@ -12,6 +12,7 @@ async function main() {
   console.log("🌱 Seeding database...");
 
   await prisma.approvalLog.deleteMany();
+  await prisma.taskStatusHistory.deleteMany();
   await prisma.taskStatus.deleteMany();
   await prisma.taskPIC.deleteMany();
   await prisma.task.deleteMany();
@@ -146,6 +147,12 @@ async function main() {
     { name: "Pengadaan tempat sampah",         programId: progs.p5, deadline: "2026-07-30", notes: "50 unit tempat sampah pilah" },
     { name: "Seleksi berkas calon penerima",   programId: progs.p6, deadline: "2026-07-15", notes: "Verifikasi rapor & prestasi", evidenceUrl: "https://example.com/seleksi.pdf", updatedAt: "2026-06-28" },
     { name: "Wawancara kandidat",              programId: progs.p6, deadline: "2026-07-30", notes: "Panel wawancara 3 orang" },
+
+    // Countdown task — deadline today + 3 hours (simulasi "3h")
+    { name: "Laporan mingguan program",        programId: progs.p5, deadline: "2026-07-15", notes: "Laporan perkembangan minggu ini" },
+
+    // Overdue task — deadline kemarin (simulasi "Lewat")
+    { name: "Pengumpulan data baseline",       programId: progs.p5, deadline: "2026-07-13", notes: "Data baseline sebelum intervensi" },
   ];
   const tasks: Record<string, string> = {};
   for (let i = 0; i < taskSpecs.length; i++) {
@@ -155,7 +162,7 @@ async function main() {
     });
     tasks[`t${i + 1}`] = created.id;
   }
-  console.log("✅ 20 tasks");
+  console.log("✅ 22 tasks");
 
   // ── Task PICs ──
   const tp = (tid: string, uid: string) => ({ taskId: tid, userId: uid });
@@ -185,62 +192,181 @@ async function main() {
     tp(tasks.t6, aos.hendra), tp(tasks.t12, aos.hendra), tp(tasks.t19, aos.hendra),
     tp(tasks.t2, aos.novita), tp(tasks.t5, aos.novita), tp(tasks.t13, aos.novita),
     tp(tasks.t1, aos.rizky), tp(tasks.t5, aos.rizky), tp(tasks.t9, aos.rizky), tp(tasks.t17, aos.rizky),
+    // New tasks (t21, t22)
+    tp(tasks.t21, aos.puja), tp(tasks.t21, aos.rani),
+    tp(tasks.t22, aos.puja), tp(tasks.t22, aos.rani),
   ]});
-  console.log("✅ 53 task PICs");
+  console.log("✅ 57 task PICs");
 
   // ── Task Statuses ──
-  const ts = (tid: string, uid: string, status: string, isPendingApproval: boolean, isApproved: boolean, notes?: string) =>
-    ({ taskId: tid, userId: uid, status, isPendingApproval, isApproved, notes: notes || null });
+  const ts = (tid: string, uid: string, status: string, isPendingApproval: boolean, isApproved: boolean, notes: string | null = null, updatedAt: string | null = null) =>
+    ({ taskId: tid, userId: uid, status, isPendingApproval, isApproved, notes, updatedAt });
   await prisma.taskStatus.createMany({ data: [
-    ts(tasks.t1, aos.andri, "selesai", true, false, "Sudah survey 60 responden, menunggu verifikasi"),
-    ts(tasks.t1, aos.sandy, "selesai", true, false, "Survey 55 responden di Jakarta"),
-    ts(tasks.t2, aos.andri, "berjalan", false, false, "Pelatihan sudah 2 sesi, masih 3 sesi lagi"),
-    ts(tasks.t2, aos.puja, "berjalan", false, false),
+    ts(tasks.t1, aos.andri, "selesai", true, false, "Sudah survey 60 responden, menunggu verifikasi", "2026-07-08"),
+    ts(tasks.t1, aos.sandy, "selesai", true, false, "Survey 55 responden di Jakarta", "2026-07-09"),
+    ts(tasks.t1, aos.rizky, "selesai", true, false, "Survey 40 responden Surabaya-Jakarta", "2026-07-07"),
+    ts(tasks.t2, aos.andri, "berjalan", false, false, "Pelatihan sudah 2 sesi, masih 3 sesi lagi", "2026-07-10"),
+    ts(tasks.t2, aos.puja, "berjalan", false, false, undefined, "2026-07-05"),
     ts(tasks.t2, aos.banu, "belum", false, false),
-    ts(tasks.t5, aos.sandy, "berjalan", false, false, "Sudah mapping 40 UMKM"),
-    ts(tasks.t5, aos.febri, "berjalan", false, false, "Mapping 30 UMKM di Bandung"),
-    ts(tasks.t9, aos.andri, "selesai", false, true, "Verifikasi 50 siswa selesai"),
-    ts(tasks.t9, aos.rani, "selesai", false, true, "Verifikasi 25 siswa di Malang"),
-    ts(tasks.t12, aos.banu, "berjalan", false, false, "Sudah daftar 40 siswa"),
-    ts(tasks.t12, aos.sandy, "berjalan", false, false),
-    ts(tasks.t13, aos.andri, "selesai", true, false, "Bimbel selesai, 45 siswa hadir"),
-    ts(tasks.t13, aos.banu, "berjalan", false, false),
+    ts(tasks.t2, aos.novita, "berjalan", false, false, "Pelatihan Jakarta sesi 1 selesai", "2026-07-12"),
     ts(tasks.t3, aos.andri, "belum", false, false),
     ts(tasks.t3, aos.banu, "belum", false, false),
     ts(tasks.t4, aos.andri, "belum", false, false),
     ts(tasks.t4, aos.puja, "belum", false, false),
+    ts(tasks.t5, aos.sandy, "berjalan", false, false, "Sudah mapping 40 UMKM", "2026-07-05"),
+    ts(tasks.t5, aos.febri, "berjalan", false, false, "Mapping 30 UMKM di Bandung", "2026-07-06"),
+    ts(tasks.t5, aos.novita, "selesai", false, true, "Mapping 25 UMKM Jakarta selesai", "2026-07-10"),
+    ts(tasks.t5, aos.rizky, "berjalan", false, false, "Mapping 20 UMKM", "2026-07-08"),
     ts(tasks.t6, aos.sandy, "belum", false, false),
     ts(tasks.t6, aos.ferdinan, "belum", false, false),
+    ts(tasks.t6, aos.hendra, "belum", false, false),
     ts(tasks.t7, aos.febri, "belum", false, false),
     ts(tasks.t7, aos.bagus, "belum", false, false),
     ts(tasks.t8, aos.sandy, "belum", false, false),
     ts(tasks.t8, aos.bagus, "belum", false, false),
+    ts(tasks.t9, aos.andri, "selesai", false, true, "Verifikasi 50 siswa selesai", "2026-07-10"),
+    ts(tasks.t9, aos.rani, "selesai", false, true, "Verifikasi 25 siswa di Malang", "2026-07-11"),
+    ts(tasks.t9, aos.rizky, "selesai", false, true, "Verifikasi 20 siswa Surabaya", "2026-07-09"),
+    ts(tasks.t9, aos.dian, "berjalan", false, false, "Mulai verifikasi data siswa Malang", "2026-07-05"),
     ts(tasks.t10, aos.puja, "belum", false, false),
     ts(tasks.t10, aos.rani, "belum", false, false),
+    ts(tasks.t10, aos.dian, "belum", false, false),
     ts(tasks.t11, aos.andri, "belum", false, false),
     ts(tasks.t11, aos.puja, "belum", false, false),
+    ts(tasks.t12, aos.banu, "berjalan", false, false, "Sudah daftar 40 siswa", "2026-07-08"),
+    ts(tasks.t12, aos.sandy, "berjalan", false, false, undefined, "2026-07-10"),
+    ts(tasks.t12, aos.hendra, "berjalan", false, false, "Sudah daftar 30 siswa di Bandung", "2026-07-07"),
+    ts(tasks.t13, aos.andri, "selesai", true, false, "Bimbel selesai, 45 siswa hadir", "2026-07-14"),
+    ts(tasks.t13, aos.banu, "berjalan", false, false, undefined, "2026-07-08"),
+    ts(tasks.t13, aos.novita, "belum", false, false),
     ts(tasks.t14, aos.sandy, "belum", false, false),
     ts(tasks.t14, aos.febri, "belum", false, false),
     ts(tasks.t15, aos.bagus, "belum", false, false),
     ts(tasks.t15, aos.andri, "belum", false, false),
-    // New AO task statuses
-    ts(tasks.t9, aos.dian, "berjalan", false, false, "Mulai verifikasi data siswa Malang"),
-    ts(tasks.t10, aos.dian, "belum", false, false),
+    ts(tasks.t16, aos.puja, "belum", false, false),
+    ts(tasks.t16, aos.rani, "belum", false, false),
     ts(tasks.t16, aos.dian, "belum", false, false),
-    ts(tasks.t6, aos.hendra, "belum", false, false),
-    ts(tasks.t12, aos.hendra, "berjalan", false, false, "Sudah daftar 30 siswa di Bandung"),
-    ts(tasks.t19, aos.hendra, "selesai", true, false, "Verifikasi 15 berkas di Bandung"),
-    ts(tasks.t2, aos.novita, "berjalan", false, false, "Pelatihan Jakarta sesi 1 selesai"),
-    ts(tasks.t5, aos.novita, "selesai", false, true, "Mapping 25 UMKM Jakarta selesai"),
-    ts(tasks.t13, aos.novita, "belum", false, false),
-    ts(tasks.t1, aos.rizky, "selesai", true, false, "Survey 40 responden Surabaya-Jakarta"),
-    ts(tasks.t5, aos.rizky, "berjalan", false, false, "Mapping 20 UMKM"),
-    ts(tasks.t9, aos.rizky, "selesai", false, true, "Verifikasi 20 siswa Surabaya"),
+    ts(tasks.t17, aos.puja, "belum", false, false),
+    ts(tasks.t17, aos.rani, "belum", false, false),
     ts(tasks.t17, aos.rizky, "belum", false, false),
+    ts(tasks.t18, aos.puja, "belum", false, false),
+    ts(tasks.t19, aos.sandy, "belum", false, false),
+    ts(tasks.t19, aos.ferdinan, "belum", false, false),
+    ts(tasks.t19, aos.hendra, "selesai", true, false, "Verifikasi 15 berkas di Bandung", "2026-07-10"),
+    ts(tasks.t20, aos.sandy, "belum", false, false),
+    ts(tasks.t20, aos.bagus, "belum", false, false),
   ]});
   console.log("✅ 45 task statuses");
 
-  console.log("🎉 Seeding complete! 13 users, 6 programs, 20 tasks");
+  // ── Approval Logs ──
+  const al = (tid: string, uid: string, action: string, cid: string, note?: string, createdAt?: string) =>
+    ({ taskId: tid, userId: uid, action, createdById: cid, note: note ?? null, createdAt: createdAt || "2026-07-14" });
+
+  await prisma.approvalLog.createMany({ data: [
+    // Approved tasks
+    al(tasks.t9, aos.andri, "approve", admin.id, "Verifikasi lengkap dan valid", "2026-07-12"),
+    al(tasks.t9, aos.rani, "approve", admin.id, "Data siswa lengkap", "2026-07-12"),
+    al(tasks.t9, aos.rizky, "approve", admin.id, "Verifikasi Surabaya ok", "2026-07-11"),
+    al(tasks.t5, aos.novita, "approve", admin.id, "Mapping UMKM Jakarta sudah sesuai target", "2026-07-12"),
+    // Reject → approve flow (t1 andri — rejected first, then approved)
+    al(tasks.t1, aos.andri, "reject", admin.id, "Jumlah responden kurang, target 50", "2026-07-09"),
+    al(tasks.t1, aos.andri, "approve", admin.id, "Sudah ditambah, sekarang 60 responden", "2026-07-13"),
+    // Reject → approve flow (t1 sandy)
+    al(tasks.t1, aos.sandy, "reject", admin.id, "Data responden belum lengkap", "2026-07-10"),
+    al(tasks.t1, aos.sandy, "approve", admin.id, "Data sudah dilengkapi", "2026-07-14"),
+    // Reject (t13 — still pending after reject)
+    al(tasks.t13, aos.andri, "reject", admin.id, "Absensi belum disertakan, mohon dilampirkan", "2026-07-15"),
+    // Reject (t19 hendra)
+    al(tasks.t19, aos.hendra, "reject", admin.id, "Berkas kurang lengkap, mohon dicek ulang", "2026-07-12"),
+    // Approved (t1 rizky)
+    al(tasks.t1, aos.rizky, "approve", admin.id, "Survey 40 responden valid", "2026-07-10"),
+  ]});
+  console.log("✅ 12 approval logs");
+
+  // ── TaskStatusHistory — Riwayat submit AO ──
+  const sh = (tid: string, uid: string, status: string, notes?: string, evidenceUrl?: string) =>
+    ({ taskId: tid, userId: uid, status, notes: notes || null, evidenceUrl: evidenceUrl || null });
+
+  await prisma.taskStatusHistory.createMany({ data: [
+    // t1 andri — 3 submissions: pertama → ditolak → kedua → disetujui
+    sh(tasks.t1, aos.andri, "selesai", "Sudah survey 50 responden, mohon dicek", "https://drive.google.com/survei_v1.pdf"),
+    sh(tasks.t1, aos.andri, "selesai", "Sudah ditambah jadi 60 responden, lampiran lengkap", "https://drive.google.com/survei_v2.pdf"),
+
+    // t1 sandy — 2 submissions: pertama → ditolak → kedua → disetujui
+    sh(tasks.t1, aos.sandy, "selesai", "Survey 55 responden di Jakarta", "https://drive.google.com/survei_jkt.pdf"),
+    sh(tasks.t1, aos.sandy, "selesai", "Data responden sudah dilengkapi dengan foto dan KTP", "https://drive.google.com/survei_jkt_lengkap.pdf"),
+
+    // t1 rizky — 1 submission → disetujui
+    sh(tasks.t1, aos.rizky, "selesai", "Survey 40 responden Surabaya-Jakarta, data valid", "https://drive.google.com/survei_rizky.pdf"),
+
+    // t2 andri — 1 submission (berjalan, belum selesai)
+    sh(tasks.t2, aos.andri, "berjalan", "Pelatihan sudah 2 sesi, masih 3 sesi lagi"),
+
+    // t2 novita — 1 submission
+    sh(tasks.t2, aos.novita, "berjalan", "Pelatihan Jakarta sesi 1 selesai, 25 peserta hadir"),
+
+    // t5 sandy — 1 submission
+    sh(tasks.t5, aos.sandy, "berjalan", "Sudah mapping 40 UMKM, target 100 total", "https://drive.google.com/mapping_umkm.pdf"),
+
+    // t5 febri — 1 submission
+    sh(tasks.t5, aos.febri, "berjalan", "Mapping 30 UMKM di Bandung, mayoritas kuliner"),
+
+    // t5 novita — 1 submission → disetujui
+    sh(tasks.t5, aos.novita, "selesai", "Mapping 25 UMKM Jakarta selesai, semua data sudah diinput", "https://drive.google.com/mapping_jkt.pdf"),
+
+    // t9 andri — 1 submission → disetujui
+    sh(tasks.t9, aos.andri, "selesai", "Verifikasi 50 siswa selesai, semua dokumen lengkap"),
+
+    // t9 rani — 1 submission
+    sh(tasks.t9, aos.rani, "selesai", "Verifikasi 25 siswa di Malang, 23 valid, 2 pending"),
+
+    // t9 rizky — 1 submission
+    sh(tasks.t9, aos.rizky, "selesai", "Verifikasi 20 siswa Surabaya, semua lolos"),
+
+    // t9 dian — 1 submission
+    sh(tasks.t9, aos.dian, "berjalan", "Mulai verifikasi data siswa Malang, 10 dari 25 selesai"),
+
+    // t12 banu — 1 submission
+    sh(tasks.t12, aos.banu, "berjalan", "Sudah daftar 40 siswa dari target 100"),
+
+    // t12 hendra — 1 submission
+    sh(tasks.t12, aos.hendra, "berjalan", "Sudah daftar 30 siswa di Bandung"),
+
+    // t13 andri — 2 submissions: pertama → ditolak
+    sh(tasks.t13, aos.andri, "selesai", "Bimbel selesai, 45 siswa hadir dari 50 terdaftar"),
+    sh(tasks.t13, aos.andri, "selesai", "Absensi sudah dilampirkan, mohon dicek kembali"),
+
+    // t19 hendra — 2 submissions: pertama → ditolak
+    sh(tasks.t19, aos.hendra, "selesai", "Verifikasi 15 berkas di Bandung"),
+    sh(tasks.t19, aos.hendra, "selesai", "Berkas sudah dicek ulang, 12 valid, 3 perlu revisi"),
+  ]});
+  console.log("✅ 21 task status history entries");
+
+  // ── Make Program p3 (Beasiswa SD Juara) 100% complete ──
+  // Approve all t9, t10, t11 statuses for all their AOs
+  const p3tasks = [tasks.t9, tasks.t10, tasks.t11];
+  const p3aos = [aos.andri, aos.puja, aos.rani, aos.rizky, aos.dian];
+  const p3Approvals: { taskId: string; userId: string; action: string; createdById: string; note: string | null; createdAt: string }[] = [];
+  for (const tid of p3tasks) {
+    for (const uid of p3aos) {
+      // Already have status for some, approve all
+      p3Approvals.push(al(tid, uid, "approve", admin.id, "Program Beasiswa SD Juara selesai", "2026-07-15"));
+    }
+  }
+  // Update task statuses to selesai+approved for p3
+  const p3statusUpdates = [];
+  for (const tid of p3tasks) {
+    for (const uid of p3aos) {
+      p3statusUpdates.push(ts(tid, uid, "selesai", false, true, "Tuntas — Program Beasiswa SD Juara", "2026-07-15"));
+    }
+  }
+  // Upsert: delete existing statuses for p3 tasks, then create new ones
+  await prisma.taskStatus.deleteMany({ where: { taskId: { in: p3tasks } } });
+  await prisma.taskStatus.createMany({ data: p3statusUpdates });
+  await prisma.approvalLog.createMany({ data: p3Approvals as any });
+  console.log("✅ Program p3 (Beasiswa SD Juara) marked 100% complete");
+
+  console.log("🎉 Seeding complete! 13 users, 6 programs, 22 tasks, 12 approval logs, 21 status history, p3=100%");
 }
 
 main()

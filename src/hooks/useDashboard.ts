@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { api } from "@/lib/axios";
-import type { Program, Task, User as UserType } from "@/types";
+import { useUsersQuery } from "@/services/query/useUsersQuery";
+import { useProgramsQuery } from "@/services/query/useProgramsQuery";
+import { useTasksQuery } from "@/services/query/useTasksQuery";
+import type { Program, User as UserType } from "@/types";
 
 export interface DashboardFilters {
   areas: string[];
@@ -27,23 +28,9 @@ function isProgramActiveNow(p: Program): boolean {
 }
 
 export function usePDODashboard(filters: DashboardFilters = getDefaultFilters()) {
-  const { data: programs, isLoading: progLoading } = useQuery({
-    queryKey: ["programs"],
-    queryFn: () => api.get<Program[]>("/programs").then((r) => r.data),
-    staleTime: 30_000,
-  });
-
-  const { data: users, isLoading: userLoading } = useQuery({
-    queryKey: ["users"],
-    queryFn: () => api.get<UserType[]>("/users").then((r) => r.data),
-    staleTime: 30_000,
-  });
-
-  const { data: tasks, isLoading: taskLoading } = useQuery({
-    queryKey: ["tasks"],
-    queryFn: () => api.get<Task[]>("/tasks").then((r) => r.data),
-    staleTime: 30_000,
-  });
+  const { programs, isLoading: progLoading } = useProgramsQuery();
+  const { users, isLoading: userLoading } = useUsersQuery();
+  const { tasks, isLoading: taskLoading } = useTasksQuery();
 
   const allPrograms = useMemo(
     () => (Array.isArray(programs) ? programs : []),
@@ -90,15 +77,24 @@ export function usePDODashboard(filters: DashboardFilters = getDefaultFilters())
       : programsForChart;
 
     chartPrograms.forEach((p) => {
-      const progTasks = allTasks.filter((t) => t.programId === p.id);
-      if (!progTasks.length) { belum++; return; }
-      const done = progTasks.filter((t) =>
-        (t.statuses || []).some((s) => s.isApproved),
-      ).length;
-      const pct = Math.round((done / progTasks.length) * 100);
-      if (pct === 100) selesai++;
-      else if (pct === 0) belum++;
-      else berjalan++;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const jadwal = p.jadwal || [];
+
+      if (!jadwal.length) { belum++; return; }
+
+      const allEnded = jadwal.every((j) => {
+        if (!j.endDate) return false;
+        return new Date(j.endDate + "T00:00:00+07:00") < today;
+      });
+      const anyStarted = jadwal.some((j) => {
+        if (!j.startDate) return false;
+        return new Date(j.startDate + "T00:00:00+07:00") <= today;
+      });
+
+      if (allEnded) selesai++;
+      else if (anyStarted) berjalan++;
+      else belum++;
     });
 
     const allMonthTasks = allTasks.filter((t) => activeProgramIds.has(t.programId));
@@ -173,20 +169,8 @@ export function usePDODashboard(filters: DashboardFilters = getDefaultFilters())
 }
 
 export function useAODashboard() {
-  const { data: programs } = useQuery({
-    queryKey: ["programs"],
-    queryFn: () => api.get<Program[]>("/programs").then((r) => r.data),
-    staleTime: 30_000,
-  });
-
-  const { data: tasks } = useQuery({
-    queryKey: ["tasks"],
-    queryFn: () => api.get<Task[]>("/tasks").then((r) => r.data),
-    staleTime: 30_000,
-  });
-
-  const allPrograms = Array.isArray(programs) ? programs : [];
-  const allTasks = Array.isArray(tasks) ? tasks : [];
+  const { programs: allPrograms } = useProgramsQuery();
+  const { tasks: allTasks } = useTasksQuery();
 
   return { programs: allPrograms, tasks: allTasks };
 }

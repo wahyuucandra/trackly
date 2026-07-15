@@ -45,7 +45,7 @@ export function Topbar({ tabs, activeTab, onTabChange }: TopbarProps) {
               onClick={() => onTabChange(tab.id)}
               className={`px-4 py-2.5 rounded-[14px] text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
                 activeTab === tab.id
-                  ? "bg-gradient-to-r from-primary to-[#1d4ed8] text-white shadow-sm"
+                  ? "bg-primary text-white shadow-sm"
                   : "bg-secondary text-secondary-foreground hover:bg-[#e2e8f0]"
               }`}
             >

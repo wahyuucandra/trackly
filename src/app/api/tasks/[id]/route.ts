@@ -57,6 +57,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       },
     });
 
+    // Always insert history
+    await prisma.taskStatusHistory.create({
+      data: {
+        taskId: id,
+        userId: session.user.id,
+        status,
+        notes: aoNote || null,
+        evidenceUrl: evidenceUrl || null,
+      },
+    });
+
     // Update task evidenceUrl
     if (evidenceUrl !== undefined) {
       await prisma.task.update({
@@ -71,7 +82,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     include: {
       pics: { include: { user: { select: { id: true, name: true, username: true } } } },
       statuses: { include: { user: { select: { id: true, name: true, username: true } } } },
-      approvals: true,
+      approvals: {
+        include: {
+          user: { select: { id: true, name: true, username: true } },
+          createdBy: { select: { id: true, name: true } },
+        },
+      },
+      statusHistory: {
+        include: { user: { select: { id: true, name: true, username: true } } },
+        orderBy: { createdAt: "desc" },
+      },
       program: { select: { id: true, name: true, type: true } },
     },
   });

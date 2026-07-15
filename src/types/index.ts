@@ -79,6 +79,7 @@ export interface Task {
   program?: Pick<Program, "id" | "name" | "type">;
   pics?: TaskPIC[];
   statuses?: TaskStatus[];
+  statusHistory?: TaskStatusHistory[];
   approvals?: ApprovalLog[];
   createdBy?: Pick<User, "id" | "name">;
 }
@@ -97,10 +98,23 @@ export interface TaskStatus {
   isPendingApproval: boolean;
   isApproved: boolean;
   rejectionNote: string | null;
+  createdAt?: string;
+  updatedAt?: string | null;
   user?: Pick<User, "id" | "name" | "username">;
 }
 
-export type TaskStatusValue = "belum" | "berjalan" | "selesai";
+export interface TaskStatusHistory {
+  id: string;
+  taskId: string;
+  userId: string;
+  status: TaskStatusValue;
+  notes: string | null;
+  evidenceUrl?: string | null;
+  createdAt: string;
+  user?: Pick<User, "id" | "name" | "username">;
+}
+
+export type TaskStatusValue = "dibuat" | "belum" | "berjalan" | "selesai" | "disetujui" | "ditolak";
 
 export interface ApprovalLog {
   id: string;

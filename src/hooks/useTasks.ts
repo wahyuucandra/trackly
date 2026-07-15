@@ -1,26 +1,16 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
-import { api } from "@/lib/axios";
-import { toast } from "sonner";
+import { useMemo, useState } from "react";
+import { useProgramsQuery } from "@/services/query/useProgramsQuery";
+import { useTasksQuery } from "@/services/query/useTasksQuery";
 import type { Program, Task } from "@/types";
 
+// Re-export from services
+export { useTasksMutation as useTaskUpdate } from "@/services/mutation";
+
 export function useMyTasks(userArea: string[], userId: string) {
-  const { data: programs } = useQuery<Program[]>({
-    queryKey: ["programs"],
-    queryFn: () => api.get("/programs").then((r) => r.data),
-    staleTime: 30_000,
-  });
-
-  const { data: tasks } = useQuery<Task[]>({
-    queryKey: ["tasks"],
-    queryFn: () => api.get("/tasks").then((r) => r.data),
-    staleTime: 30_000,
-  });
-
-  const allPrograms = Array.isArray(programs) ? programs : [];
-  const allTasks = Array.isArray(tasks) ? tasks : [];
+  const { programs: allPrograms, isLoading: programsLoading } = useProgramsQuery();
+  const { tasks: allTasks, isLoading: tasksLoading } = useTasksQuery();
 
   const myTasks = useMemo(() =>
     allTasks.filter((t) => {
@@ -35,7 +25,7 @@ export function useMyTasks(userArea: string[], userId: string) {
     [allTasks, allPrograms, userArea, userId]
   );
 
-  return { myTasks, allPrograms };
+  return { myTasks, allPrograms, isLoading: programsLoading || tasksLoading };
 }
 
 export function useTaskFilters(myTasks: Task[], userId: string) {
@@ -59,18 +49,4 @@ export function useTaskFilters(myTasks: Task[], userId: string) {
   }, [filtered]);
 
   return { filter, setFilter, filtered, grouped };
-}
-
-export function useTaskUpdate() {
-  const queryClient = useQueryClient();
-
-  const updateTask = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) => api.patch(`/tasks/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      toast.success("Tugas berhasil diupdate");
-    },
-  });
-
-  return { updateTask };
 }

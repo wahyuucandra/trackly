@@ -1,60 +1,49 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
-import { api } from "@/lib/axios";
-import { toast } from "sonner";
-import type { Program, Task, User as UserType } from "@/types";
+import type { Program, Task } from "@/types";
 
-export function useProgramList() {
-  const { data: programs, isLoading } = useQuery<Program[]>({
-    queryKey: ["programs"],
-    queryFn: () => api.get("/programs").then((r) => r.data),
-    staleTime: 30_000,
-  });
-  return { programs: Array.isArray(programs) ? programs : [], isLoading };
-}
+// Re-export from services
+export { useProgramsQuery as useProgramList } from "@/services/query";
+export { useProgramsMutation as useProgramMutations } from "@/services/mutation";
 
-export function useProgramFilters(allPrograms: Program[]) {
+export function useProgramFilters(allPrograms: Program[], gcmAreas: string[]) {
   const [filterType, setFilterType] = useState("");
-  const [filterArea, setFilterArea] = useState("");
+  const [filterAreas, setFilterAreas] = useState<string[]>([]);
   const [filterSearch, setFilterSearch] = useState("");
+  const [visibleCount, setVisibleCount] = useState(6);
 
   const filtered = useMemo(() => {
     let result = allPrograms;
     if (filterSearch) result = result.filter((p) => p.name.toLowerCase().includes(filterSearch.toLowerCase()));
     if (filterType) result = result.filter((p) => p.type === filterType);
-    if (filterArea) result = result.filter((p) => (p.jadwal || []).some((j) => j.area === filterArea));
+    if (filterAreas.length > 0) result = result.filter((p) => (p.jadwal || []).some((j) => filterAreas.includes(j.area)));
     return result;
-  }, [allPrograms, filterType, filterArea, filterSearch]);
+  }, [allPrograms, filterType, filterAreas, filterSearch]);
 
-  const allAreas = [...new Set(allPrograms.flatMap((p) => (p.jadwal || []).map((j) => j.area)))];
+  const visible = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < filtered.length;
 
-  return { filterType, setFilterType, filterArea, setFilterArea, filterSearch, setFilterSearch, filtered, allAreas };
-}
+  const loadMore = () => setVisibleCount((prev) => prev + 6);
+  const resetVisible = () => setVisibleCount(6);
 
-export function useProgramMutations() {
-  const queryClient = useQueryClient();
+  const handleFilterChange = (partial: { type?: string; areas?: string[]; search?: string }) => {
+    if (partial.type !== undefined) setFilterType(partial.type);
+    if (partial.areas !== undefined) setFilterAreas(partial.areas);
+    if (partial.search !== undefined) setFilterSearch(partial.search);
+    resetVisible();
+  };
 
-  const deleteProgram = useMutation({
-    mutationFn: (id: string) => api.delete(`/programs/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["programs"] });
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      toast.success("Program berhasil dihapus");
-    },
-  });
+  const handleReset = () => {
+    setFilterType("");
+    setFilterAreas([]);
+    setFilterSearch("");
+    resetVisible();
+  };
 
-  const deleteTask = useMutation({
-    mutationFn: (id: string) => api.delete(`/tasks/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["programs"] });
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      toast.success("Tugas berhasil dihapus");
-    },
-  });
+  const hasFilters = filterAreas.length > 0 || filterType !== "" || filterSearch !== "";
 
-  return { deleteProgram, deleteTask };
+  return { filterType, filterAreas, filterSearch, filtered, visible, hasMore, loadMore, hasFilters, handleFilterChange, handleReset };
 }
 
 export function getProgramProgress(prog: Program) {
@@ -68,4 +57,49 @@ export function getTaskAOUsers(task: Task, prog: Program) {
   const pics = (task.pics || []).map((p) => p.userId);
   if (pics.length) return pics;
   return (prog.aos || []).map((a) => a.userId);
+}
+
+// ─── Form Hook ───────────────────────────────────────────────
+
+interface JadwalEntry {
+  area: string;
+  startDate: string;
+  endDate: string;
+}
+
+export function useProgramForm() {
+  const [formData, setFormData] = useState({ name: "", type: "Program Development", notes: "" });
+  const [jadwal, setJadwal] = useState<JadwalEntry[]>([{ area: "", startDate: "", endDate: "" }]);
+  const [aoIds, setAoIds] = useState<string[]>([]);
+
+  const resetForm = () => {
+    setFormData({ name: "", type: "Program Development", notes: "" });
+    setJadwal([{ area: "", startDate: "", endDate: "" }]);
+    setAoIds([]);
+  };
+
+  const fillForm = (prog: Program) => {
+    setFormData({ name: prog.name, type: prog.type, notes: prog.notes || "" });
+    setJadwal(
+      (prog.jadwal || []).length > 0
+        ? prog.jadwal.map((j) => ({ area: j.area, startDate: j.startDate?.split("T")[0] || "", endDate: j.endDate?.split("T")[0] || "" }))
+        : [{ area: "", startDate: "", endDate: "" }],
+    );
+    setAoIds((prog.aos || []).map((a) => a.userId));
+  };
+
+  const addJadwal = () => setJadwal((prev) => [...prev, { area: "", startDate: "", endDate: "" }]);
+  const removeJadwal = (idx: number) => setJadwal((prev) => prev.filter((_, i) => i !== idx));
+  const updateJadwal = (idx: number, field: keyof JadwalEntry, value: string) =>
+    setJadwal((prev) => prev.map((j, i) => (i === idx ? { ...j, [field]: value } : j)));
+
+  const buildPayload = () => ({
+    name: formData.name,
+    type: formData.type,
+    notes: formData.notes || null,
+    jadwal: jadwal.filter((j) => j.area),
+    aoIds: aoIds.length > 0 ? aoIds : undefined,
+  });
+
+  return { formData, setFormData, jadwal, aoIds, setAoIds, resetForm, fillForm, addJadwal, removeJadwal, updateJadwal, buildPayload };
 }

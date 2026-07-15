@@ -25,6 +25,7 @@ model User {
   taskPICs        TaskPIC[]
   taskStatuses    TaskStatus[]
   approvalLogs    ApprovalLog[]
+  statusHistory   TaskStatusHistory[]
   createdPrograms Program[]     @relation("ProgramCreator")
   createdTasks    Task[]        @relation("TaskCreator")
   createdApprovals ApprovalLog[] @relation("ApprovalCreator")
@@ -113,6 +114,7 @@ model Task {
   pics      TaskPIC[]
   statuses  TaskStatus[]
   approvals ApprovalLog[]
+  statusHistory TaskStatusHistory[]
 
   @@map("tasks")
 }
@@ -143,6 +145,8 @@ model TaskStatus {
   isPendingApproval Boolean  @default(false) @map("is_pending_approval")
   isApproved        Boolean  @default(false) @map("is_approved")
   rejectionNote     String?  @map("rejection_note")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         String?  @map("updated_at")
 
   task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -168,4 +172,22 @@ model ApprovalLog {
   createdBy User @relation("ApprovalCreator", fields: [createdById], references: [id])
 
   @@map("approval_logs")
+}
+
+// ============================================================
+// TaskStatusHistory — Riwayat submit status oleh AO (immutable)
+// ============================================================
+model TaskStatusHistory {
+  id          String   @id @default(uuid())
+  taskId      String   @map("task_id")
+  userId      String   @map("user_id")
+  status      String
+  notes       String?
+  evidenceUrl String?  @map("evidence_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("task_status_history")
 }

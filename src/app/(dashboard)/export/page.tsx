@@ -1,14 +1,13 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
-import { api } from "@/lib/axios";
+import { useUsersQuery } from "@/services/query/useUsersQuery";
+import { useProgramsQuery } from "@/services/query/useProgramsQuery";
 import { useGcmList, useAreaMap } from "@/hooks/useGcm";
 import { Button } from "@/components/ui/button";
 import { MultiSelect } from "@/components/ui/multiselect";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download, FileSpreadsheet, RotateCcw } from "lucide-react";
-import type { User as UserType, Program } from "@/types";
 
 const STATUS_OPTIONS = ["belum", "berjalan", "selesai"];
 const STATUS_MAP = new Map([
@@ -23,16 +22,17 @@ export default function ExportPage() {
   const [programIds, setProgramIds] = useState<string[]>([]);
   const [statuses, setStatuses] = useState<string[]>([]);
 
-  const { gcm } = useGcmList();
+  const { gcm, isLoading: gcmLoading } = useGcmList();
   const areaMap = useAreaMap();
 
-  const { data: users } = useQuery<UserType[]>({ queryKey: ["users"], queryFn: () => api.get("/users").then((r) => r.data) });
-  const { data: programs } = useQuery<Program[]>({ queryKey: ["programs"], queryFn: () => api.get("/programs").then((r) => r.data) });
-  const allUsers = Array.isArray(users) ? users : [];
-  const allPrograms = Array.isArray(programs) ? programs : [];
+  const { users: allUsers, isLoading: usersLoading } = useUsersQuery();
+  const { programs: allPrograms, isLoading: progsLoading } = useProgramsQuery();
   const aoUsers = allUsers.filter((u) => u.role === "AO");
 
   const allAreas = useMemo(() => gcm.filter((g) => g.flag_active).map((g) => g.cd_value), [gcm]);
+
+  const isLoading = usersLoading || progsLoading || gcmLoading;
+  if (isLoading) return null;
 
   const hasFilters = areas.length > 0 || aos.length > 0 || programIds.length > 0 || statuses.length > 0;
 

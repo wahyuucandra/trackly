@@ -72,7 +72,7 @@ export function MultiSelect({
                 variant="outline"
                 size="sm"
                 onClick={() => setOpen(!open)}
-                className="h-9 text-sm gap-1.5 font-normal w-full justify-start"
+                className="h-10 text-sm gap-1.5 font-normal w-full justify-start rounded-md"
             >
                 <span className="truncate">{label}</span>
                 <ChevronDown className="w-3.5 h-3.5 text-muted-foreground ml-auto shrink-0" />

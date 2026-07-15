@@ -10,7 +10,16 @@ export async function GET() {
     include: {
       pics: { include: { user: { select: { id: true, name: true, username: true } } } },
       statuses: { include: { user: { select: { id: true, name: true, username: true } } } },
-      approvals: true,
+      approvals: {
+        include: {
+          user: { select: { id: true, name: true, username: true } },
+          createdBy: { select: { id: true, name: true } },
+        },
+      },
+      statusHistory: {
+        include: { user: { select: { id: true, name: true, username: true } } },
+        orderBy: { createdAt: "desc" },
+      },
       program: { select: { id: true, name: true, type: true } },
       createdBy: { select: { id: true, name: true } },
     },
@@ -47,9 +56,31 @@ export async function POST(req: NextRequest) {
     include: {
       pics: { include: { user: { select: { id: true, name: true, username: true } } } },
       statuses: true,
+      approvals: {
+        include: {
+          user: { select: { id: true, name: true, username: true } },
+          createdBy: { select: { id: true, name: true } },
+        },
+      },
+      statusHistory: {
+        include: { user: { select: { id: true, name: true, username: true } } },
+        orderBy: { createdAt: "desc" },
+      },
       program: { select: { id: true, name: true, type: true } },
     },
   });
+
+  // Insert "dibuat" history for each PIC
+  if (picIds?.length) {
+    await prisma.taskStatusHistory.createMany({
+      data: picIds.map((userId: string) => ({
+        taskId: task.id,
+        userId,
+        status: "dibuat",
+        notes: null,
+      })),
+    });
+  }
 
   return NextResponse.json(task, { status: 201 });
 }

@@ -23,6 +23,16 @@ export async function GET(req: NextRequest) {
       include: {
         pics: { include: { user: { select: { id: true, name: true, username: true } } } },
         statuses: { include: { user: { select: { id: true, name: true, username: true } } } },
+        approvals: {
+          include: {
+            user: { select: { id: true, name: true, username: true } },
+            createdBy: { select: { id: true, name: true } },
+          },
+        },
+        statusHistory: {
+          include: { user: { select: { id: true, name: true, username: true } } },
+          orderBy: { createdAt: "desc" as const },
+        },
       },
     },
     createdBy: { select: { id: true, name: true } },

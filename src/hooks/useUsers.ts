@@ -1,58 +1,13 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { api } from "@/lib/axios";
-import { toast } from "sonner";
 import type { User as UserType } from "@/types";
 
-export function useUserList() {
-  const { data, isLoading } = useQuery<UserType[]>({
-    queryKey: ["users"],
-    queryFn: () => api.get("/users").then((r) => r.data),
-    staleTime: 30_000,
-  });
-  return { users: Array.isArray(data) ? data : [], isLoading };
-}
+// Re-export from services
+export { useUsersQuery as useUserList } from "@/services/query";
+export { useUsersMutation as useUserMutations } from "@/services/mutation";
 
-export function useUserMutations() {
-  const queryClient = useQueryClient();
-
-  const createUser = useMutation({
-    mutationFn: (data: Record<string, unknown>) => api.post("/users", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      toast.success("User berhasil dibuat");
-    },
-    onError: (err: { response?: { data?: { error?: string } } }) => {
-      toast.error(err?.response?.data?.error || "Gagal membuat user");
-    },
-  });
-
-  const updateUser = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
-      api.patch(`/users/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      toast.success("User berhasil diupdate");
-    },
-    onError: (err: { response?: { data?: { error?: string } } }) => {
-      toast.error(err?.response?.data?.error || "Gagal mengupdate user");
-    },
-  });
-
-  const deleteUser = useMutation({
-    mutationFn: (id: string) => api.delete(`/users/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      toast.success("User berhasil dihapus");
-    },
-  });
-
-  return { createUser, updateUser, deleteUser };
-}
-
-export function useUserForm(users: UserType[]) {
+export function useUserForm(users: UserType[], allAreas: string[] = []) {
   const [formData, setFormData] = useState({
     username: "", name: "", password: "", role: "AO",
   });
@@ -64,7 +19,7 @@ export function useUserForm(users: UserType[]) {
   const resetForm = () => {
     setFormData({ username: "", name: "", password: "", role: "AO" });
     setSelectedAreas([]);
-    setPerms({ dashboard: true, tasks: false, programs: false, approvals: false, export: false, users: false });
+    setPerms({ dashboard: true, tasks: true, programs: false, approvals: false, export: false, users: false });
   };
 
   const fillForm = (user: UserType) => {
@@ -78,6 +33,18 @@ export function useUserForm(users: UserType[]) {
       programs: p?.programs ?? false, approvals: p?.approvals ?? false,
       export: p?.export ?? false, users: p?.users ?? false,
     });
+  };
+
+  /** Set role and auto-adjust permissions */
+  const setRole = (role: string) => {
+    setFormData((prev) => ({ ...prev, role }));
+    if (role === "AO") {
+      setPerms({ dashboard: true, tasks: true, programs: false, approvals: false, export: false, users: false });
+    } else {
+      // Admin: tasks disabled (monitor via approval), dashboard always on, all areas auto
+      setPerms({ dashboard: true, tasks: false, programs: false, approvals: false, export: false, users: false });
+      setSelectedAreas([]);
+    }
   };
 
   /** Auto-generate username from name: lowercase, no spaces, no special chars, unique */
@@ -102,9 +69,9 @@ export function useUserForm(users: UserType[]) {
     name: formData.name,
     password: formData.password || undefined,
     role: formData.role,
-    area: selectedAreas,
+    area: formData.role === "Admin" ? allAreas : selectedAreas,
     permissions: perms,
   });
 
-  return { formData, setFormData, selectedAreas, setSelectedAreas, perms, setPerms, resetForm, fillForm, buildPayload, generateUsername };
+  return { formData, setFormData, selectedAreas, setSelectedAreas, perms, setPerms, resetForm, fillForm, setRole, buildPayload, generateUsername };
 }

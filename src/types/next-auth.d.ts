@@ -26,5 +26,6 @@ declare module "next-auth/jwt" {
     role: string;
     area: string[];
     permissions: Record<string, boolean>;
+    sessionToken: string;
   }
 }

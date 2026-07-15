@@ -45,10 +45,30 @@ export async function POST(req: NextRequest) {
       where: { taskId_userId: { taskId, userId } },
       data: { isApproved: true, isPendingApproval: false, rejectionNote: null },
     });
+
+    // Insert history: approved
+    await prisma.taskStatusHistory.create({
+      data: {
+        taskId,
+        userId,
+        status: "disetujui",
+        notes: note || null,
+      },
+    });
   } else if (action === "reject") {
     await prisma.taskStatus.update({
       where: { taskId_userId: { taskId, userId } },
       data: { isPendingApproval: false, isApproved: false, rejectionNote: note || "Ditolak oleh PDO." },
+    });
+
+    // Insert history: rejected
+    await prisma.taskStatusHistory.create({
+      data: {
+        taskId,
+        userId,
+        status: "ditolak",
+        notes: note || "Ditolak oleh PDO.",
+      },
     });
   }
 
@@ -59,7 +79,7 @@ export async function POST(req: NextRequest) {
       action,
       note: note || null,
       createdById: session.user.id,
-      createdAt: new Date().toISOString().slice(0, 10),
+      createdAt: new Date().toISOString(),
     },
   });
 

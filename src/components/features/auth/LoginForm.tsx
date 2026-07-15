@@ -90,7 +90,7 @@ export function LoginForm() {
       <Button
         type="submit"
         disabled={isSubmitting}
-        className="w-full h-12 rounded-[14px] bg-gradient-to-r from-primary to-[#1d4ed8] hover:from-[#1d4ed8] hover:to-primary text-white font-bold gap-2 transition-all"
+        className="w-full h-12 rounded-[14px] bg-primary hover:from-[#1d4ed8] hover:to-primary text-white font-bold gap-2 transition-all"
       >
         {isSubmitting ? (
           "Memproses..."
