@@ -1,0 +1,2137 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;touch-action:manipulation}
+:root{
+--bg:#f4f7fb;
+--surface:#ffffff;
+--border:#e2e8f0;
+--text:#0f172a;
+--muted:#64748b;
+--primary:#2563eb;
+--primary2:#1d4ed8;
+--success:#16a34a;
+--danger:#dc2626;
+--warning:#d97706;
+--radius:18px;
+}
+body{
+font-family:Inter,Segoe UI,Arial,sans-serif;
+background:var(--bg);
+color:var(--text);
+min-height:100vh;
+}
+.hidden{display:none!important}
+.app{min-height:100vh}
+
+/* LOGIN */
+@keyframes gradientShift{
+0%{background-position:0% 50%}
+50%{background-position:100% 50%}
+100%{background-position:0% 50%}
+}
+@keyframes floatUp{
+from{opacity:0;transform:translateY(30px)}
+to{opacity:1;transform:translateY(0)}
+}
+@keyframes pulseGlow{
+0%,100%{opacity:.3;transform:scale(1)}
+50%{opacity:.5;transform:scale(1.1)}
+}
+.auth-screen{
+min-height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:40px;
+position:relative;
+overflow:hidden;
+background:linear-gradient(-45deg,#0f172a,#1e3a8a,#1e40af,#0f172a);
+background-size:400% 400%;
+animation:gradientShift 15s ease infinite;
+}
+.auth-screen::before,.auth-screen::after{
+content:'';
+position:absolute;
+border-radius:50%;
+pointer-events:none;
+}
+.auth-screen::before{
+width:500px;height:500px;
+background:radial-gradient(circle,rgba(59,130,246,.15) 0%,transparent 70%);
+top:-100px;right:-100px;
+animation:pulseGlow 8s ease-in-out infinite;
+}
+.auth-screen::after{
+width:400px;height:400px;
+background:radial-gradient(circle,rgba(99,102,241,.12) 0%,transparent 70%);
+bottom:-80px;left:-80px;
+animation:pulseGlow 10s ease-in-out infinite;
+animation-delay:-4s;
+}
+.auth-card{
+width:100%;
+max-width:440px;
+background:rgba(255,255,255,.97);
+backdrop-filter:blur(20px);
+padding:40px 36px;
+border-radius:24px;
+box-shadow:0 30px 80px rgba(0,0,0,.3);
+position:relative;
+z-index:1;
+animation:floatUp .8s ease-out;
+}
+.auth-icon{
+display:flex;justify-content:center;margin-bottom:12px;
+}
+.auth-icon i{
+font-size:48px;color:var(--primary);
+background:linear-gradient(135deg,#3b82f6,#6366f1);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+background-clip:text;
+}
+.auth-title{
+font-size:32px;
+font-weight:800;
+text-align:center;
+margin-bottom:4px;
+background:linear-gradient(135deg,#1e3a8a,#3b82f6);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+background-clip:text;
+}
+.auth-sub{
+color:#64748b;
+text-align:center;
+margin-bottom:28px;
+font-size:14px;
+}
+.field{margin-bottom:20px}
+.field label{
+display:block;
+margin-bottom:8px;
+font-size:13px;
+font-weight:700;
+color:#475569;
+}
+.field input,.field select,textarea{
+width:100%;
+padding:14px 16px;
+border:1px solid #dbe3ef;
+border-radius:14px;
+font-size:14px;
+background:#fff;
+transition:.2s;
+}
+.field input:focus,.field select:focus,textarea:focus{
+outline:none;
+border-color:var(--primary);
+box-shadow:0 0 0 4px rgba(37,99,235,.15);
+}
+
+.btn{
+border:none;
+border-radius:14px;
+padding:12px 20px;
+font-weight:700;
+cursor:pointer;
+display:inline-flex;
+align-items:center;
+gap:8px;
+transition:.2s;
+}
+.btn:hover{
+transform:translateY(-1px);
+box-shadow:0 10px 20px rgba(0,0,0,.08);
+}
+.btn-primary{
+background:linear-gradient(135deg,var(--primary),var(--primary2));
+color:#fff;
+}
+.btn-success{background:var(--success);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-warn{background:var(--warning);color:#fff}
+.btn-sm{padding:10px 14px;font-size:13px}
+.btn-xs{padding:5px 10px;font-size:11px;border-radius:6px}
+.btn-full{width:100%;justify-content:center}
+
+/* HEADER */
+.topbar{
+height:72px;
+background:#fff;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 32px;
+border-bottom:1px solid var(--border);
+box-shadow:0 4px 20px rgba(15,23,42,.05);
+position:sticky;
+top:0;
+z-index:10;
+}
+.topbar-left,.topbar-right{
+display:flex;
+align-items:center;
+gap:18px;
+}
+.logo{
+font-size:22px;
+font-weight:800;
+color:#1e3a8a;
+}
+.nav-tabs{
+display:flex;
+gap:8px;
+}
+.nav-tab{
+padding:11px 18px;
+border:none;
+border-radius:14px;
+background:#f1f5f9;
+color:#475569;
+font-weight:600;
+cursor:pointer;
+transition:.2s;
+}
+.nav-tab:hover{
+background:#e2e8f0;
+}
+.nav-tab.active{
+background:linear-gradient(135deg,#2563eb,#1d4ed8);
+color:#fff;
+}
+.role-chip{
+padding:7px 12px;
+border-radius:999px;
+font-size:12px;
+font-weight:700;
+}
+.role-pdo{
+background:#dbeafe;
+color:#1d4ed8;
+}
+.role-ao{
+background:#dcfce7;
+color:#15803d;
+}
+
+.main{
+padding:34px;
+}
+.page-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:28px;
+}
+.page-title{
+font-size:30px;
+font-weight:800;
+}
+
+.grid-2,.grid-3{
+display:grid;
+gap:24px;
+}
+.grid-2{
+grid-template-columns:repeat(auto-fit,minmax(350px,1fr));
+}
+.grid-3{
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+}
+
+/* CARDS */
+.card{
+background:#fff;
+padding:26px;
+border-radius:24px;
+border:1px solid var(--border);
+box-shadow:0 10px 30px rgba(15,23,42,.06);
+}
+.card-title{
+font-size:18px;
+font-weight:800;
+margin-bottom:10px;
+}
+.card-meta{
+color:var(--muted);
+font-size:14px;
+line-height:1.6;
+}
+.card-actions{
+display:flex;
+gap:10px;
+margin-top:15px;
+flex-wrap:wrap;
+}
+
+.stat-card{
+background:#fff;
+padding:28px;
+border-radius:24px;
+box-shadow:0 10px 30px rgba(15,23,42,.06);
+border:1px solid var(--border);
+text-align:center;
+}
+.stat-label{
+font-size:13px;
+color:var(--muted);
+margin-bottom:8px;
+text-transform:uppercase;
+font-weight:700;
+}
+.stat-value{
+font-size:38px;
+font-weight:800;
+}
+
+/* STATUS */
+.badge{
+display:inline-flex;
+align-items:center;
+padding:7px 12px;
+border-radius:999px;
+font-size:12px;
+font-weight:700;
+}
+.badge-blue{background:#dbeafe;color:#1d4ed8}
+.badge-green{background:#dcfce7;color:#15803d}
+.badge-red{background:#fee2e2;color:#b91c1c}
+.badge-amber{background:#fef3c7;color:#b45309}
+.badge-gray{background:#e2e8f0;color:#475569}
+.badge-purple{background:#ede9fe;color:#6d28d9}
+
+/* PROGRESS */
+.prog-bar{
+height:10px;
+background:#e2e8f0;
+border-radius:999px;
+overflow:hidden;
+margin-top:10px;
+}
+.prog-fill{
+height:100%;
+background:linear-gradient(90deg,#2563eb,#60a5fa);
+}
+
+/* TASK */
+.task-item,.approval-item{
+background:#fff;
+padding:14px 16px 12px 16px;
+border-radius:12px;
+border:1px solid var(--border);
+margin-bottom:10px;
+border-left:4px solid var(--task-color,var(--border));
+}
+.task-header{
+display:flex;
+justify-content:space-between;
+gap:8px;
+margin-bottom:4px;
+}
+.task-name{
+font-size:14px;
+font-weight:600;
+}
+.task-note,.approval-meta{
+font-size:13px;
+color:var(--muted);
+}
+.task-footer{
+display:flex;
+justify-content:space-between;
+flex-wrap:wrap;
+gap:6px;
+margin-top:6px;
+}
+.ao-chip{
+cursor:pointer;
+font-weight:600;
+color:var(--ao-color);
+transition:opacity .15s;
+}
+.ao-chip:hover{opacity:.7}
+.ao-chip::before{
+content:'';
+display:inline-block;width:8px;height:8px;border-radius:50%;
+background:var(--ao-color);margin-right:4px;vertical-align:middle;
+}
+.approval-note{
+background:#f8fafc;
+padding:12px;
+border-radius:12px;
+margin:12px 0;
+}
+
+/* PROGRAM CARDS */
+.filter-bar{
+display:flex;
+align-items:center;
+gap:10px;
+background:var(--surface);
+padding:14px 18px;
+border-radius:16px;
+border:1px solid var(--border);
+margin-bottom:1.25rem;
+}
+.filter-bar select{
+padding:8px 14px;
+border:1px solid var(--border);
+border-radius:10px;
+font-size:13px;
+background:var(--bg);
+color:var(--text);
+outline:none;
+cursor:pointer;
+}
+.filter-bar select:focus{border-color:var(--primary)}
+.prog-card{
+background:var(--surface);
+border-radius:20px;
+border:1px solid var(--border);
+padding:20px 24px;
+margin-bottom:1.25rem;
+box-shadow:0 4px 16px rgba(15,23,42,.04);
+}
+.prog-card-head{
+display:flex;
+align-items:flex-start;
+justify-content:space-between;
+gap:12px;
+margin-bottom:8px;
+}
+.prog-card-title{
+font-size:16px;
+font-weight:700;
+display:flex;
+align-items:center;
+gap:8px;
+}
+.prog-card-title i{color:var(--primary)}
+.prog-card-actions{
+display:flex;
+gap:6px;
+flex-shrink:0;
+}
+.prog-card-meta{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:6px 14px;
+font-size:13px;
+color:var(--muted);
+margin-bottom:8px;
+}
+.prog-card-meta span{display:flex;align-items:center;gap:5px}
+.prog-card-note{
+font-size:13px;
+color:var(--muted);
+margin-bottom:10px;
+display:flex;
+align-items:flex-start;
+gap:6px;
+}
+.prog-card-note i{flex-shrink:0;margin-top:2px}
+.prog-card-progress{
+margin-bottom:10px;
+}
+.prog-card-progress-label{
+font-size:12px;
+color:var(--muted);
+display:block;
+text-align:right;
+margin-top:2px;
+}
+.prog-tasks{
+margin-top:6px;
+}
+.prog-tasks-header{
+font-size:13px;
+font-weight:600;
+color:var(--muted);
+margin-bottom:10px;
+padding-bottom:6px;
+border-bottom:1px solid var(--border);
+}
+.task-pics{
+font-size:12px;
+color:var(--muted);
+margin-bottom:6px;
+display:flex;
+align-items:center;
+flex-wrap:wrap;
+gap:6px;
+}
+.task-footer-left{
+display:flex;
+align-items:center;
+flex-wrap:wrap;
+gap:8px;
+}
+.task-ao-note{
+font-size:12px;
+color:var(--muted);
+display:flex;align-items:center;gap:4px;
+}
+.task-bukti-link{
+font-size:12px;
+color:#378ADD;
+text-decoration:none;
+display:flex;align-items:center;gap:4px;
+}
+.prog-empty-tasks{
+font-size:13px;
+color:var(--muted);
+font-style:italic;
+padding:12px 0 4px;
+display:flex;align-items:center;gap:6px;
+}
+.prog-layout{
+display:flex;
+gap:1.25rem;
+align-items:flex-start;
+}
+.prog-left{
+flex:1;
+min-width:0;
+}
+.ao-panel{
+width:380px;
+flex-shrink:0;
+background:var(--surface);
+border-radius:20px;
+border:1px solid var(--border);
+padding:20px;
+position:sticky;
+top:1rem;
+max-height:calc(100vh - 120px);
+overflow-y:auto;
+box-shadow:0 4px 16px rgba(15,23,42,.04);
+}
+.ao-panel-header{
+display:flex;
+align-items:center;
+justify-content:space-between;
+margin-bottom:14px;
+padding-bottom:12px;
+border-bottom:1px solid var(--border);
+}
+.ao-panel-title{
+font-size:16px;
+font-weight:700;
+}
+.ao-panel-stats{
+display:grid;
+grid-template-columns:1fr 1fr 1fr;
+gap:8px;
+margin-bottom:14px;
+}
+.ao-stat{
+border-radius:12px;
+padding:12px 8px;
+text-align:center;
+background:var(--bg);
+}
+.ao-stat-val{
+font-size:24px;
+font-weight:800;
+}
+.ao-stat-lbl{
+font-size:11px;
+color:var(--muted);
+margin-top:2px;
+}
+.ao-chip.active{
+box-shadow:0 0 0 2px var(--ao-color);
+border-radius:4px;
+}
+
+/* TABLE */
+.table-wrap{
+background:#fff;
+border-radius:22px;
+overflow:hidden;
+border:1px solid var(--border);
+box-shadow:0 8px 25px rgba(15,23,42,.05);
+}
+table{
+width:100%;
+border-collapse:collapse;
+}
+th{
+background:#f8fafc;
+padding:16px;
+font-size:12px;
+text-transform:uppercase;
+color:#64748b;
+}
+td{
+padding:16px;
+border-top:1px solid var(--border);
+}
+tr:hover td{
+background:#f8fafc;
+}
+.perm-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:12px;
+}
+.perm-item{
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:12px 16px;
+border-radius:12px;
+border:1px solid var(--border);
+transition:all .2s;
+cursor:pointer;
+user-select:none;
+}
+.perm-item:hover{border-color:var(--primary)}
+.perm-item.checked{background:#eef2ff;border-color:var(--primary)}
+.perm-item.disabled{opacity:.6;background:#f1f5f9;border-color:#e2e8f0}
+.perm-item input{position:absolute;opacity:0;pointer-events:none}
+.perm-info{display:flex;align-items:center;gap:10px}
+.perm-info i{font-size:20px}
+.perm-label{font-size:13px;font-weight:600}
+.perm-desc{font-size:11px;color:var(--muted);margin-top:1px}
+.perm-toggle{width:38px;height:22px;border-radius:11px;position:relative;transition:all .25s;flex-shrink:0}
+.perm-toggle.on{background:var(--primary)}
+.perm-toggle.off{background:#cbd5e1}
+.perm-toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:2px;left:2px;transition:all .25s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.perm-item.checked .perm-toggle::after{left:18px}
+
+/* MODAL */
+.modal-overlay{
+position:fixed;
+inset:0;
+background:rgba(15,23,42,.55);
+display:flex;
+align-items:center;
+justify-content:center;
+padding:30px;
+z-index:100;
+backdrop-filter:blur(4px);
+}
+.modal{
+width:100%;
+max-width:620px;
+background:#fff;
+border-radius:28px;
+padding:32px;
+box-shadow:0 30px 80px rgba(0,0,0,.3);
+max-height:90vh;
+overflow:auto;
+}
+.modal-title{
+font-size:24px;
+font-weight:800;
+margin-bottom:24px;
+}
+.modal-footer{
+display:flex;
+justify-content:flex-end;
+gap:10px;
+margin-top:20px;
+}
+.modal .field{
+margin-bottom:16px;
+}
+.modal select{
+width:100%;
+padding:14px 16px;
+border:1px solid #dbe3ef;
+border-radius:14px;
+font-size:14px;
+background:#fff;
+}
+.modal .modal-title i{
+margin-right:8px;
+color:var(--primary);
+}
+.chip-grid{display:flex;flex-wrap:wrap;gap:8px}
+.chip-grid.col{flex-direction:column}
+.chip-item{display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border:2px solid #e2e8f0;border-radius:12px;font-size:13px;transition:.15s;background:#fff;user-select:none;touch-action:none}
+.chip-item:has(input:checked){border-color:var(--primary);background:#eef2ff;color:var(--primary);font-weight:600}
+.chip-item input{accent-color:var(--primary);margin:0}
+.chip-item label{color:inherit;font-size:inherit;background:none;border:none;padding:0;margin:0;pointer-events:none}
+
+.divider{
+height:1px;
+background:var(--border);
+margin:25px 0;
+}
+
+.section-label{
+font-size:12px;
+font-weight:800;
+letter-spacing:.08em;
+text-transform:uppercase;
+color:#64748b;
+margin-bottom:14px;
+}
+
+.empty-state{
+background:#fff;
+padding:70px;
+border-radius:24px;
+text-align:center;
+border:1px solid var(--border);
+color:#64748b;
+box-shadow:0 8px 30px rgba(15,23,42,.05);
+}
+
+.err{
+margin-top:10px;
+font-size:13px;
+color:#dc2626;
+}
+
+@media(max-width:768px){
+.topbar{
+height:auto;
+padding:20px;
+flex-direction:column;
+gap:15px;
+}
+.main{
+padding:20px;
+}
+.page-title{
+font-size:24px;
+}
+.auth-card{
+padding:28px 24px;
+}
+.auth-icon i{
+font-size:36px;
+}
+}
+.cal-wrap{background:var(--surface);border-radius:var(--radius);padding:20px;margin-bottom:1.5rem}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.cal-head .month{font-weight:700;font-size:16px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal-dow{font-size:11px;font-weight:700;color:var(--muted);padding:6px 0;text-transform:uppercase}
+.cal-day{padding:8px 4px;border-radius:10px;font-size:13px;cursor:pointer;position:relative;transition:.15s;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.cal-day:hover{background:var(--bg)}
+.cal-day.other{color:#ccc}
+.cal-day.today{background:#eef2ff;font-weight:700}
+.cal-day.has-task{font-weight:700;background:#fee2e2;color:var(--danger);border-radius:10px}
+.cal-dot{width:6px;height:6px;border-radius:50%;background:var(--danger);margin-top:2px}
+.cal-day.approved .cal-dot{background:var(--success)}
+.cal-day.today.has-task{background:#c7d9fe}
+.cal-day.has-task.approved{background:#dcfce7;color:var(--success)}
+.cal-day.today.has-task.approved{background:#bbf7d0}
+.cal-task-list{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.cal-task-list .cal-task-item{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px}
+</style>
+
+</head>
+<body>
+<div class="app" id="app">
+
+<!-- AUTH SCREEN -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-card">
+    <div class="auth-icon"><i class="ti ti-chart-bar" aria-hidden="true"></i></div>
+    <div class="auth-title">TRACKLY</div>
+    <div class="auth-sub">Monitoring Program PDO &amp; AO</div>
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="loginUser" placeholder="username">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="loginPass" placeholder="password">
+    </div>
+    <div id="loginErr" class="err hidden"></div>
+    <div style="margin-top:1.25rem">
+      <button class="btn btn-primary btn-full" onclick="doLogin()"><i class="ti ti-login" aria-hidden="true"></i> Masuk</button>
+    </div>
+    
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" class="hidden">
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="logo"><i class="ti ti-chart-bar" aria-hidden="true"></i> TRACKLY</span>
+      <nav class="nav-tabs" id="navTabs"></nav>
+    </div>
+    <div class="topbar-right">
+      <span class="user-badge" id="userBadge"></span>
+      <span class="role-chip" id="roleBadge"></span>
+      <button class="btn btn-sm btn-warn" onclick="doLogout()"><i class="ti ti-logout" aria-hidden="true"></i></button>
+    </div>
+  </div>
+  <div class="main" id="mainContent"></div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+</div>
+
+<script>
+// === USER MANAGEMENT ===
+const DEFAULT_USERS = {
+  admin:{name:'Admin',password:'admin',role:'Admin',area:[],permissions:{dashboard:true,programs:true,approvals:true,export:true,tasks:false,users:true}},
+  andri:{name:'Andri',password:'andri',role:'AO',area:[],permissions:{dashboard:true,tasks:true,programs:false,approvals:false,export:false,users:false}},
+  puja:{name:'Puja',password:'puja',role:'AO',area:[],permissions:{dashboard:true,tasks:true,programs:false,approvals:false,export:false,users:false}},
+  banu:{name:'Banu',password:'banu',role:'AO',area:[],permissions:{dashboard:true,tasks:true,programs:false,approvals:false,export:false,users:false}},
+  sandy:{name:'Sandy',password:'sandy',role:'AO',area:[],permissions:{dashboard:true,tasks:true,programs:false,approvals:false,export:false,users:false}},
+  ferdinan:{name:'Ferdinan',password:'ferdinan',role:'AO',area:[],permissions:{dashboard:true,tasks:true,programs:false,approvals:false,export:false,users:false}},
+  febri:{name:'Febri',password:'febri',role:'AO',area:[],permissions:{dashboard:true,tasks:true,programs:false,approvals:false,export:false,users:false}},
+  bagus:{name:'Bagus',password:'bagus',role:'AO',area:[],permissions:{dashboard:true,tasks:true,programs:false,approvals:false,export:false,users:false}}
+};
+
+function loadUsers(){
+  try{
+    const s=localStorage.getItem('monitorpro_users');
+    if(s) return JSON.parse(s);
+  }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT_USERS));
+}
+function saveUsers(){
+  try{localStorage.setItem('monitorpro_users',JSON.stringify(USERS));}catch(e){}
+}
+
+let USERS=loadUsers();
+let STATE=loadState();
+// Migrasi: konversi program format lama (area[]) ke jadwal[]
+STATE.programs.forEach(p=>{
+  if(!p.jadwal){
+    const areas=Array.isArray(p.area)?p.area:(p.area?[p.area]:[]);
+    if(areas.length) p.jadwal=areas.map(a=>({area:a,tglMulai:p.tglMulai||'',tglSelesai:p.tglSelesai||''}));
+    else p.jadwal=[];
+    delete p.area; delete p.tglMulai; delete p.tglSelesai;
+  }
+});
+// Migrasi: konversi aoNote (string) ke aoNotes, status (string) ke statuses, pendingApproval/approved ke per-AO
+STATE.tasks.forEach(t=>{
+  if(typeof t.aoNote==='string'&&t.aoNote){
+    t.aoNotes={};
+    if(t.assignedPICs&&t.assignedPICs.length) t.aoNotes[t.assignedPICs[0]]=t.aoNote;
+    else t.aoNotes._legacy=t.aoNote;
+  }
+  if(!t.aoNotes||typeof t.aoNotes==='string') t.aoNotes={};
+  delete t.aoNote;
+  if(typeof t.status==='string'&&t.status){
+    t.statuses={};
+    if(t.assignedPICs&&t.assignedPICs.length) t.statuses[t.assignedPICs[0]]=t.status;
+    else t.statuses._legacy=t.status;
+  }
+  if(!t.statuses||typeof t.statuses==='string') t.statuses={};
+  delete t.status;
+  // Migrasi: pendingApproval/approved ke per-AO
+  const firstAO=Object.keys(t.statuses||{}).filter(k=>k!=='_legacy')[0]||(t.assignedPICs&&t.assignedPICs.length?t.assignedPICs[0]:null);
+  if(!t.pendingApprovals){
+    t.pendingApprovals={};
+    if(t.pendingApproval&&firstAO) t.pendingApprovals[firstAO]=true;
+  }
+  if(!t.approvals){
+    t.approvals={};
+    if(t.approved&&firstAO) t.approvals[firstAO]=true;
+  }
+  if(!t.rejectionNotes) t.rejectionNotes={};
+  delete t.pendingApproval; delete t.approved; delete t.approvalNote;
+});
+saveState();
+let currentUser=null;
+
+function loadState(){
+  try{
+    const s = localStorage.getItem('monitorpro_v2');
+    if(s) return JSON.parse(s);
+  }catch(e){}
+  return {
+    programs:[
+      {id:'p1',name:'Program Literasi Digital',jenis:'Program Development',jadwal:[{area:'Surabaya',tglMulai:'2025-06-01',tglSelesai:'2025-08-31'}],catatan:'Fokus pada pelatihan masyarakat umum',createdAt:'2025-06-01',assignedAOs:[]},
+      {id:'p2',name:'Pemberdayaan UMKM',jenis:'Program Development',jadwal:[{area:'Jakarta',tglMulai:'2025-06-15',tglSelesai:'2025-09-15'}],catatan:'Prioritas UMKM kuliner dan kerajinan',createdAt:'2025-06-03',assignedAOs:[]}
+    ],
+    tasks:[
+      {id:'t1',programId:'p1',nama:'Survei awal peserta',deadline:'2025-07-10',catatan:'Min. 50 responden',statuses:{_legacy:'selesai'},aoNotes:{},bukti:'https://example.com/bukti1.jpg',pendingApprovals:{},approvals:{},rejectionNotes:{},updatedAt:'2025-06-20'},
+      {id:'t2',programId:'p1',nama:'Pelatihan modul 1',deadline:'2025-07-25',catatan:'Materi dasar internet dan media sosial',statuses:{_legacy:'berjalan'},aoNotes:{},bukti:'',pendingApprovals:{},approvals:{},rejectionNotes:{},updatedAt:'2025-06-22'},
+      {id:'t3',programId:'p1',nama:'Evaluasi akhir program',deadline:'2025-08-28',catatan:'Kuesioner kepuasan peserta',statuses:{},aoNotes:{},bukti:'',pendingApprovals:{},approvals:{},rejectionNotes:{},updatedAt:''},
+      {id:'t4',programId:'p2',nama:'Pemetaan UMKM sasaran',deadline:'2025-07-20',catatan:'Target 100 UMKM',statuses:{_legacy:'berjalan'},aoNotes:{},bukti:'https://example.com/peta.png',pendingApprovals:{},approvals:{},rejectionNotes:{},updatedAt:'2025-06-21'},
+      {id:'t5',programId:'p2',nama:'Workshop pemasaran digital',deadline:'2025-08-10',catatan:'Bekerjasama dengan dinas perdagangan',statuses:{},aoNotes:{},bukti:'',pendingApprovals:{},approvals:{},rejectionNotes:{},updatedAt:''}
+    ],
+    approvalLog:[]
+  };
+}
+
+function saveState(){
+  try{localStorage.setItem('monitorpro_v2',JSON.stringify(STATE));}catch(e){}
+}
+
+function genId(){return 'id_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)}
+function today(){return new Date().toISOString().slice(0,10)}
+function fmtDate(d){if(!d)return'-';const dt=new Date(d);return dt.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})}
+function daysDiff(d){if(!d)return null;const diff=Math.ceil((new Date(d)-new Date())/86400000);return diff}
+
+function getTaskStatus(t,uname){
+  if(t.statuses&&t.statuses[uname]) return t.statuses[uname];
+  if(t.statuses&&t.statuses._legacy) return t.statuses._legacy;
+  return 'belum';
+}
+function isAOApproved(t,uname){
+  return t.approvals&&t.approvals[uname]?true:false;
+}
+function isTaskApproved(t){
+  return t.approvals&&Object.values(t.approvals).some(v=>v)?true:false;
+}
+function statusBadge(s,approved){
+  if(approved) return '<span class="badge badge-green"><i class="ti ti-check" aria-hidden="true"></i> Terverifikasi</span>';
+  if(s==='selesai') return '<span class="badge badge-purple"><i class="ti ti-clock" aria-hidden="true"></i> Menunggu</span>';
+  if(s==='berjalan') return '<span class="badge badge-blue"><i class="ti ti-player-play" aria-hidden="true"></i> Berjalan</span>';
+  return '<span class="badge badge-gray">Belum</span>';
+}
+function deadlineBadge(d){
+  const diff=daysDiff(d);
+  if(diff===null) return '';
+  if(diff<0) return '<span class="badge badge-red"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Lewat '+Math.abs(diff)+'h</span>';
+  if(diff<=7) return '<span class="badge badge-amber"><i class="ti ti-clock" aria-hidden="true"></i> '+diff+' hari</span>';
+  return '<span class="badge badge-gray">'+fmtDate(d)+'</span>';
+}
+
+function formatAOs(aoList){
+  return (aoList||[]).map(uname=>{
+    const u=USERS[uname];
+    return u?u.name:uname;
+  }).join(', ');
+}
+const AO_COLORS=['#2563eb','#7c3aed','#db2777','#dc2626','#ea580c','#ca8a04','#16a34a','#0891b2','#4f46e5','#9333ea','#e11d48','#d97706'];
+function getAOColor(uname){
+  let h=0;
+  for(let i=0;i<uname.length;i++) h=((h<<5)-h)+uname.charCodeAt(i), h|=0;
+  return AO_COLORS[Math.abs(h)%AO_COLORS.length];
+}
+let selectedAO=null;
+function formatAOClickable(aoList,progId){
+  if(!aoList||!aoList.length) return '-';
+  return aoList.map(uname=>{
+    const u=USERS[uname];
+    return `<span class="ao-chip${selectedAO===uname?' active':''}" style="--ao-color:${getAOColor(uname)}" onclick="showAOPanel('${uname}')">${u?u.name:uname}</span>`;
+  }).join('');
+}
+function showAOPanel(uname){
+  selectedAO=selectedAO===uname?null:uname;
+  const panel=document.getElementById('aoPanel');
+  if(!panel) return;
+  if(!selectedAO){panel.classList.add('hidden');panel.innerHTML='';return;}
+  panel.classList.remove('hidden');
+  panel.innerHTML=renderAOPanel(selectedAO);
+}
+function renderAOPanel(uname){
+  const u=USERS[uname];
+  const aoTasks=STATE.tasks.filter(t=>{
+    const prog=STATE.programs.find(p=>p.id===t.programId);
+    if(!prog) return false;
+    const progAreas=getJadwal(prog).map(j=>j.area);
+    if(!progAreas.some(a=>u&&(Array.isArray(u.area)?u.area:[u.area]).includes(a))) return false;
+    return !t.assignedPICs||!t.assignedPICs.length||t.assignedPICs.includes(uname);
+  });
+  const done=aoTasks.filter(t=>isAOApproved(t,uname)).length;
+  const pct=aoTasks.length?Math.round(done/aoTasks.length*100):0;
+  return `
+  <div class="ao-panel-header">
+    <div class="ao-panel-title"><span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${getAOColor(uname)};margin-right:8px;vertical-align:middle"></span>${u?u.name:uname}</div>
+    <button class="btn btn-sm" onclick="showAOPanel(null)" style="font-size:16px;line-height:1"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="ao-panel-stats">
+    <div class="ao-stat"><div class="ao-stat-val" style="color:#16a34a">${done}</div><div class="ao-stat-lbl">Selesai</div></div>
+    <div class="ao-stat"><div class="ao-stat-val" style="color:#ca8a04">${aoTasks.length-done}</div><div class="ao-stat-lbl">Tersisa</div></div>
+    <div class="ao-stat"><div class="ao-stat-val" style="color:#2563eb">${aoTasks.length}</div><div class="ao-stat-lbl">Total</div></div>
+  </div>
+  <div class="prog-bar" style="margin-bottom:14px"><div class="prog-fill" style="width:${pct}%"></div></div>
+  <div style="font-size:13px;font-weight:600;margin-bottom:8px">Daftar Tugas</div>
+  ${aoTasks.length?aoTasks.map(t=>{
+    const prog=STATE.programs.find(p=>p.id===t.programId);
+    return `<div class="task-item" style="--task-color:${getAOColor(uname)};padding:10px 14px 8px 14px;margin-bottom:6px">
+      <div class="task-header"><span class="task-name">${t.nama}</span>${statusBadge(getTaskStatus(t,uname),isAOApproved(t,uname))}</div>
+      <div style="font-size:12px;color:var(--muted)"><i class="ti ti-folder"></i> ${prog?prog.name:'-'} ${deadlineBadge(t.deadline)}</div>
+    </div>`;
+  }).join(''):`<div style="font-size:13px;color:var(--muted);font-style:italic;padding:16px 0;text-align:center">Tidak ada tugas untuk AO ini.</div>`}
+`;
+}
+function getJadwal(p){
+  if(p.jadwal) return p.jadwal;
+  const areas=Array.isArray(p.area)?p.area:(p.area?[p.area]:[]);
+  return areas.map(a=>({area:a,tglMulai:p.tglMulai||'',tglSelesai:p.tglSelesai||''}));
+}
+function fmtJadwal(jadwal){
+  return jadwal.map(j=>j.tglMulai&&j.tglSelesai?`${j.area}: ${fmtDate(j.tglMulai)} - ${fmtDate(j.tglSelesai)}`:j.area).join(' &middot; ');
+}
+function linkify(t){
+  if(!t) return '';
+  return t.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener" style="color:#3b82f6;text-decoration:underline">$1</a>');
+}
+function toggleJadwalRow(cb){
+  const row=cb.closest('.jadwal-row');
+  if(!row) return;
+  const fields=row.querySelectorAll('.jadwal-date');
+  fields.forEach(el=>el.style.display=cb.checked?'':'none');
+}
+function toggleWaktuMode(val){
+  const w=document.getElementById('m_area_wrapper');
+  w.style.display=val?'':'none';
+  document.getElementById('m_area_sama').style.display=val==='sama'?'':'none';
+  document.getElementById('m_area_beda').style.display=val==='beda'?'':'none';
+  // Bersihkan semua checkbox area saat ganti mode agar tidak ada state basi dari mode sebelumnya
+  document.querySelectorAll('.m_area_cb').forEach(cb=>{cb.checked=false});
+}
+function getProgTasks(pid){return STATE.tasks.filter(t=>t.programId===pid)}
+function getProgProgress(pid){
+  const tasks=getProgTasks(pid);
+  if(!tasks.length) return 0;
+  const done=tasks.filter(t=>isTaskApproved(t)).length;
+  return Math.round(done/tasks.length*100);
+}
+let calMonth=new Date().getMonth(), calYear=new Date().getFullYear();
+function renderCalendar(tasks){
+  const now=new Date();
+  const todayStr=now.toISOString().slice(0,10);
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const daysInPrev=new Date(calYear,calMonth,0).getDate();
+  const months=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const taskMap={};
+  tasks.forEach(t=>{
+    if(t.deadline) taskMap[t.deadline]=(taskMap[t.deadline]||[]).concat(t);
+  });
+  let html=`<div class="cal-wrap">
+    <div class="cal-head">
+      <button class="btn btn-sm" onclick="calMonth--;if(calMonth<0){calMonth=11;calYear--}showTab('dashboard')"><i class="ti ti-chevron-left"></i></button>
+      <span class="month">${months[calMonth]} ${calYear}</span>
+      <button class="btn btn-sm" onclick="calMonth++;if(calMonth>11){calMonth=0;calYear++}showTab('dashboard')"><i class="ti ti-chevron-right"></i></button>
+    </div>
+    <div class="cal-grid">`;
+  const dows=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+  dows.forEach(d=>{html+=`<div class="cal-dow">${d}</div>`;});
+  for(let i=firstDay-1;i>=0;i--){
+    const d=daysInPrev-i;
+    html+=`<div class="cal-day other">${d}</div>`;
+  }
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const cls=['cal-day'];
+    if(dateStr===todayStr) cls.push('today');
+    if(taskMap[dateStr]) cls.push('has-task');
+    if(taskMap[dateStr]&&taskMap[dateStr].every(t=>isAOApproved(t,currentUser.username))) cls.push('approved');
+    const cnt=taskMap[dateStr]?taskMap[dateStr].length:0;
+    html+=`<div class="${cls.join(' ')}" onclick="showDayTasks('${dateStr}')">${d}${cnt?`<span class="cal-dot"></span>`:''}</div>`;
+  }
+  const totalCells=firstDay+daysInMonth;
+  const rem=(7-totalCells%7)%7;
+  for(let d=1;d<=rem;d++){
+    html+=`<div class="cal-day other">${d}</div>`;
+  }
+  html+=`</div><div id="calTaskList"></div></div>`;
+  return html;
+}
+function showDayTasks(dateStr){
+  const el=document.getElementById('calTaskList');
+  if(!el) return;
+  const dayTasks=STATE.tasks.filter(t=>t.deadline===dateStr).filter(t=>{
+    const prog=STATE.programs.find(p=>p.id===t.programId);
+    if(!prog) return false;
+    const progAreas=getJadwal(prog).map(j=>j.area);
+    if(!progAreas.some(a=>currentUser.area.includes(a))) return false;
+    return !t.assignedPICs||!t.assignedPICs.length||t.assignedPICs.includes(currentUser.username);
+  });
+  if(!dayTasks.length){el.innerHTML='';return;}
+  el.innerHTML='<div class="cal-task-list">'+dayTasks.map(t=>{
+    const prog=STATE.programs.find(p=>p.id===t.programId);
+    const icon=isAOApproved(t,currentUser.username)?'ti ti-circle-check-filled':'ti ti-circle';
+    const color=isAOApproved(t,currentUser.username)?'var(--success)':'var(--muted)';
+    return `<div class="cal-task-item"><i class="${icon}" style="color:${color}"></i> <strong>${t.nama}</strong> — ${prog?prog.name:'-'}</div>`;
+  }).join('')+'</div>';
+}
+
+// === AUTH ===
+function doLogin(){
+  const u=document.getElementById('loginUser').value.trim().toLowerCase();
+  const p=document.getElementById('loginPass').value;
+  const acc=USERS[u];
+  if(!acc||acc.password!==p){
+    const el=document.getElementById('loginErr');
+    el.textContent='Username atau password salah.';
+    el.classList.remove('hidden');
+    return;
+  }
+  const areaArr=Array.isArray(acc.area)?acc.area:(acc.area?acc.area.split(',').map(s=>s.trim()).filter(Boolean):[]);
+  currentUser={username:u,name:acc.name,role:acc.role,area:areaArr,permissions:acc.permissions};
+  document.getElementById('authScreen').classList.add('hidden');
+  document.getElementById('mainApp').classList.remove('hidden');
+  renderApp();
+}
+function doLogout(){
+  currentUser=null;
+  document.getElementById('authScreen').classList.remove('hidden');
+  document.getElementById('mainApp').classList.add('hidden');
+  document.getElementById('loginUser').value='';
+  document.getElementById('loginPass').value='';
+  document.getElementById('loginErr').classList.add('hidden');
+}
+
+// === NAVIGATION ===
+function getUserTabs(){
+  const p=currentUser.permissions;
+  const tabs=[];
+  if(p.dashboard) tabs.push({id:'dashboard',label:'Dashboard',icon:'ti-home'});
+  if(p.tasks) tabs.push({id:'my_tasks',label:'Tugas Saya',icon:'ti-list'});
+  if(p.programs) tabs.push({id:'programs',label:'Program',icon:'ti-folder'});
+  if(p.approvals) tabs.push({id:'approvals',label:'Verifikasi',icon:'ti-check'});
+  if(p.export) tabs.push({id:'export',label:'Export',icon:'ti-download'});
+  if(p.users) tabs.push({id:'users',label:'Users',icon:'ti-users'});
+  return tabs;
+}
+
+let activeTab='dashboard';
+
+function renderApp(){
+  document.getElementById('userBadge').textContent=currentUser.name;
+  const rb=document.getElementById('roleBadge');
+  rb.textContent=currentUser.role;
+  rb.className='role-chip '+(currentUser.role==='Admin'?'role-pdo':currentUser.role==='AO'?'role-ao':'role-pdo');
+  renderNav(getUserTabs());
+  showTab(activeTab);
+}
+
+function renderNav(tabs){
+  const nav=document.getElementById('navTabs');
+  nav.innerHTML=tabs.map(t=>`<button class="nav-tab${activeTab===t.id?' active':''}" onclick="showTab('${t.id}')"><i class="ti ${t.icon}" aria-hidden="true"></i>${t.label}</button>`).join('');
+}
+
+function showTab(id){
+  activeTab=id;
+  renderNav(getUserTabs());
+  const c=document.getElementById('mainContent');
+  if(id==='dashboard'){
+    if(currentUser.permissions.programs) c.innerHTML=renderPDODashboard();
+    else c.innerHTML=renderAODashboard();
+  } else if(id==='programs') c.innerHTML=renderPDOPrograms();
+  else if(id==='approvals') c.innerHTML=renderPDOApprovals();
+  else if(id==='export') c.innerHTML=renderExport();
+  else if(id==='my_tasks') c.innerHTML=renderAOTasks();
+  else if(id==='users') c.innerHTML=renderUsers();
+}
+
+// === PDO PAGES ===
+function renderDonut(slices){
+  const total=slices.reduce((s,x)=>s+x.value,0);
+  if(!total) return '<div style="text-align:center;padding:40px;color:var(--muted)">Tidak ada data bulan ini</div>';
+  const R=90,r=55, cx=120, cy=120;
+  let path='', startAngle=-90;
+  slices.forEach(s=>{
+    const pct=s.value/total;
+    const ang=pct*360;
+    const a1=startAngle, a2=startAngle+ang;
+    const x1=cx+R*Math.cos(a1*Math.PI/180), y1=cy+R*Math.sin(a1*Math.PI/180);
+    const x2=cx+R*Math.cos(a2*Math.PI/180), y2=cy+R*Math.sin(a2*Math.PI/180);
+    const large=ang>180?1:0;
+    path+=`<path d="M${cx} ${cy} L${x1} ${y1} A${R} ${R} 0 ${large} 1 ${x2} ${y2} Z" fill="${s.color}" stroke="#fff" stroke-width="2"/>`;
+    if(pct>=0.06){
+      const midAngle=startAngle+ang/2, mr=R/1.6;
+      const lx=cx+mr*Math.cos(midAngle*Math.PI/180), ly=cy+mr*Math.sin(midAngle*Math.PI/180);
+      path+=`<text x="${lx}" y="${ly}" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">${Math.round(pct*100)}%</text>`;
+    }
+    startAngle+=ang;
+  });
+  path+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="var(--surface)"/>`;
+  const bulan=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][new Date().getMonth()];
+  path+=`<text x="${cx}" y="${cy-8}" text-anchor="middle" fill="var(--text)" font-size="20" font-weight="800">${total}</text>
+<text x="${cx}" y="${cy+12}" text-anchor="middle" fill="var(--muted)" font-size="11">${bulan}</text>`;
+  return `<svg viewBox="0 0 240 240" style="width:240px;height:240px;display:block;margin:0 auto">${path}</svg>`;
+}
+function renderPDODashboard(){
+  const now=new Date();
+  const bulan=now.getMonth();
+  const tahun=now.getFullYear();
+  const aktif=STATE.programs.filter(p=>getJadwal(p).some(j=>{
+    if(!j.tglMulai||!j.tglSelesai) return false;
+    const m=new Date(now.getFullYear(),bulan,1);
+    const mulai=new Date(j.tglMulai), selesai=new Date(j.tglSelesai);
+    return mulai<=new Date(m.getFullYear(),m.getMonth()+1,0) && selesai>=m;
+  }));
+  let selesai=0, berjalan=0, belum=0;
+  aktif.forEach(p=>{
+    const prog=getProgProgress(p.id);
+    if(prog===100) selesai++;
+    else if(prog===0) belum++;
+    else berjalan++;
+  });
+  const slices=[
+    {label:'Selesai',value:selesai,color:'#16a34a'},
+    {label:'Berjalan',value:berjalan,color:'#2563eb'},
+    {label:'Belum',value:belum,color:'#d1d5db'}
+  ];
+  const totalTugas=STATE.tasks.length;
+  const tugasSelesai=STATE.tasks.filter(t=>isTaskApproved(t)).length;
+  const tugasPending=STATE.tasks.filter(t=>t.pendingApprovals&&Object.values(t.pendingApprovals).some(v=>v)&&!isTaskApproved(t)).length;
+  const aoSummary=Object.entries(USERS).filter(([,u])=>u.role==='AO').map(([uname,u])=>{
+    const areaList=Array.isArray(u.area)?u.area:(u.area?[u.area]:[]);
+    const aoTasks=STATE.tasks.filter(t=>{
+      const prog=STATE.programs.find(p=>p.id===t.programId);
+      if(!prog) return false;
+      const progAreas=getJadwal(prog).map(j=>j.area);
+      if(!progAreas.some(a=>areaList.includes(a))) return false;
+      return !t.assignedPICs||!t.assignedPICs.length||t.assignedPICs.includes(uname);
+    });
+  const done=aoTasks.filter(t=>isAOApproved(t,uname)).length;
+    const pct=aoTasks.length?Math.round(done/aoTasks.length*100):0;
+    return {uname,name:u.name,area:areaList,total:aoTasks.length,done,pct};
+  });
+  return `
+  <div class="page-header"><span class="page-title">Dashboard</span></div>
+  <div class="grid-3" style="margin-bottom:1.5rem">
+    <div class="stat-card"><div class="stat-label">Program ${['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][bulan]} ${tahun}</div><div class="stat-value">${aktif.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Tugas Selesai</div><div class="stat-value">${tugasSelesai}</div></div>
+    <div class="stat-card"><div class="stat-label">Menunggu Verifikasi</div><div class="stat-value" style="color:#BA7517">${tugasPending}</div></div>
+    <div class="stat-card"><div class="stat-label">Total Tugas</div><div class="stat-value">${totalTugas}</div></div>
+  </div>
+  <div class="section-label">Ringkasan Program Bulan ${['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][bulan]} ${tahun}</div>
+  <div style="display:flex;align-items:center;gap:2rem;flex-wrap:wrap;justify-content:center;background:var(--surface);border-radius:var(--radius);padding:20px">
+    ${renderDonut(slices)}
+    <div style="display:flex;flex-direction:column;gap:10px;font-size:14px">
+      ${slices.map(s=>`<div style="display:flex;align-items:center;gap:8px"><span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:${s.color}"></span> ${s.label}: <strong>${s.value}</strong> program</div>`).join('')}
+    </div>
+  </div>
+  <div class="section-label" style="margin-top:1.5rem">Ringkasan per AO</div>
+  <div class="card" style="overflow:hidden">
+    <table style="width:100%;border-collapse:collapse;font-size:14px">
+      <thead><tr style="text-align:left;background:var(--bg)">
+        <th style="padding:12px 16px">AO</th>
+        <th style="padding:12px 16px">Area</th>
+        <th style="padding:12px 16px;text-align:center">Total Tugas</th>
+        <th style="padding:12px 16px;text-align:center">Selesai</th>
+        <th style="padding:12px 16px">Progress</th>
+      </tr></thead>
+      <tbody>
+        ${aoSummary.map((a,i)=>`<tr${i<aoSummary.length-1?` style="border-bottom:1px solid var(--border)"`:''}>
+          <td style="padding:14px 16px;font-weight:600"><i class="ti ti-user" style="margin-right:6px;color:var(--primary)"></i>${a.name}</td>
+          <td style="padding:14px 16px;color:var(--color-text-secondary)">${a.area.join(', ')||'-'}</td>
+          <td style="padding:14px 16px;text-align:center">${a.total}</td>
+          <td style="padding:14px 16px;text-align:center;color:${a.done===a.total&&a.total>0?'var(--success)':'inherit'};font-weight:${a.done===a.total&&a.total>0?'600':'400'}">${a.done}</td>
+          <td style="padding:14px 16px;min-width:160px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="prog-bar" style="flex:1;margin:0"><div class="prog-fill" style="width:${a.pct}%"></div></div>
+              <span style="font-size:12px;font-weight:600;min-width:40px;text-align:right">${a.pct}%</span>
+            </div>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function jenisBadge(jenis){
+  const colors={ 'Program Development':'badge-blue', 'Akademik':'badge-green' };
+  return `<span class="badge ${colors[jenis]||'badge-gray'}">${jenis||'-'}</span>`;
+}
+
+function renderPDOPrograms(){
+  const filterJenis=document.getElementById('filterJenis')?.value||'';
+  const filterArea=document.getElementById('filterArea')?.value||'';
+  const filterProg=document.getElementById('filterProg')?.value||'';
+  const allAreas=[...new Set(STATE.programs.flatMap(p=>getJadwal(p).map(j=>j.area)))];
+  let filtered=STATE.programs;
+  if(filterProg) filtered=filtered.filter(p=>p.name.toLowerCase().includes(filterProg.toLowerCase()));
+  if(filterJenis) filtered=filtered.filter(p=>p.jenis===filterJenis);
+  if(filterArea) filtered=filtered.filter(p=>getJadwal(p).some(j=>j.area===filterArea));
+  return `
+  <div class="page-header">
+    <span class="page-title"><i class="ti ti-folder" style="margin-right:8px;color:var(--primary)"></i>Program</span>
+    <button class="btn btn-primary btn-sm" onclick="openModal('newProgram')"><i class="ti ti-plus" aria-hidden="true"></i> Buat Program</button>
+  </div>
+  <div class="filter-bar">
+    <i class="ti ti-adjustments-horizontal" style="color:var(--muted);font-size:18px"></i>
+    <select id="filterJenis" onchange="showTab('programs')">
+      <option value="">Semua Jenis</option>
+      <option value="Program Development"${filterJenis==='Program Development'?' selected':''}>Program Development</option>
+      <option value="Akademik"${filterJenis==='Akademik'?' selected':''}>Akademik (SD & SMP)</option>
+    </select>
+    <select id="filterArea" onchange="showTab('programs')">
+      <option value="">Semua Area</option>
+      ${allAreas.map(a=>`<option value="${a}"${filterArea===a?' selected':''}>${a}</option>`).join('')}
+    </select>
+    <input type="text" id="filterProg" placeholder="Cari program..." value="${filterProg}" oninput="showTab('programs')" style="padding:8px 12px;border:1px solid var(--border);border-radius:10px;font-size:13px;flex:1;min-width:140px;background:#fff">
+  </div>
+  <div class="prog-layout">
+    <div class="prog-left">
+      ${filtered.map(p=>{
+        const tasks=getProgTasks(p.id);
+        const prog=getProgProgress(p.id);
+        return `<div class="prog-card">
+          <div class="prog-card-head">
+            <div class="prog-card-title"><i class="ti ti-folder"></i>${p.name}</div>
+            <div class="prog-card-actions">
+              <button class="btn btn-sm" onclick="openModal('addTask','${p.id}')"><i class="ti ti-plus" aria-hidden="true"></i> Tugas</button>
+              <button class="btn btn-sm btn-primary" onclick="openModal('editProgram','${p.id}')"><i class="ti ti-edit" aria-hidden="true"></i></button>
+              <button class="btn btn-sm btn-danger" onclick="deleteProgram('${p.id}')"><i class="ti ti-trash" aria-hidden="true"></i></button>
+            </div>
+          </div>
+          <div class="prog-card-meta">
+            <span>${jenisBadge(p.jenis)}</span>
+            <span><i class="ti ti-map-pin"></i>${[...new Set(getJadwal(p).map(j=>j.area))].join(', ')}</span>
+            ${p.assignedAOs&&p.assignedAOs.length?`<span><i class="ti ti-users"></i>${formatAOs(p.assignedAOs)}</span>`:''}
+          </div>
+          ${p.catatan?`<div class="prog-card-note"><i class="ti ti-note"></i>${p.catatan}</div>`:''}
+          <div class="prog-card-progress">
+            <div class="prog-bar"><div class="prog-fill" style="width:${prog}%"></div></div>
+            <span class="prog-card-progress-label">${prog}% selesai · ${tasks.length} tugas</span>
+          </div>
+          ${tasks.length?`<div class="prog-tasks">
+            <div class="prog-tasks-header">Daftar Tugas (${tasks.length})</div>
+            ${tasks.map(t=>{
+              const taskAOs=t.assignedPICs&&t.assignedPICs.length?t.assignedPICs:p.assignedAOs;
+              const firstAO=taskAOs&&taskAOs.length?taskAOs[0]:null;
+              const aoColor=firstAO?getAOColor(firstAO):'var(--border)';
+              return `<div class="task-item" style="--task-color:${aoColor}">
+              <div class="task-header">
+                <span class="task-name">${t.nama}</span>
+                ${statusBadge(getTaskStatus(t,taskAOs&&taskAOs.length?taskAOs[0]:null),isTaskApproved(t))}
+              </div>
+              <div class="task-pics"><i class="ti ti-user"></i>${taskAOs&&taskAOs.length?formatAOClickable(taskAOs,p.id):'-'}</div>
+              ${t.catatan||Object.entries(t.aoNotes||{}).filter(([,n])=>n).length?`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;margin-top:10px">
+                <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px"><i class="ti ti-note" aria-hidden="true"></i> Catatan</div>
+                ${t.catatan?`<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0${Object.entries(t.aoNotes||{}).filter(([,n])=>n).length?';border-bottom:1px solid #f1f5f9':''}">
+                  <span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#3b82f6;color:#fff;font-size:10px;font-weight:700;flex-shrink:0;margin-top:2px"><i class="ti ti-user" style="font-size:12px" aria-hidden="true"></i></span>
+                  <div><span style="font-weight:600;font-size:12px;color:#3b82f6">Admin</span><div style="font-size:13px;color:#475569;margin-top:2px">${linkify(t.catatan)}</div></div>
+                </div>`:''}
+                ${Object.entries(t.aoNotes||{}).filter(([,n])=>n).map(([uname,note],idx)=>`<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0${idx<Object.entries(t.aoNotes||{}).filter(([,n])=>n).length-1?';border-bottom:1px solid #f1f5f9':''}">
+                  <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${getAOColor(uname)};margin-top:5px;flex-shrink:0"></span>
+                  <div><span style="font-weight:600;font-size:12px;color:#334155">${USERS[uname]?USERS[uname].name:uname}</span><div style="font-size:13px;color:#475569;margin-top:2px">${linkify(note)}</div></div>
+                </div>`).join('')}
+              </div>`:''}
+              <div class="task-footer">
+                <div class="task-footer-left">
+                  ${deadlineBadge(t.deadline)}
+                  ${t.bukti?`<a href="${t.bukti}" target="_blank" class="task-bukti-link"><i class="ti ti-external-link"></i> Bukti</a>`:''}
+                </div>
+                <div style="display:flex;gap:4px">
+                  <button class="btn btn-sm" onclick="openModal('editTask','${t.id}')"><i class="ti ti-edit" aria-hidden="true"></i></button>
+                  <button class="btn btn-sm btn-danger" onclick="deleteTask('${t.id}')"><i class="ti ti-trash" aria-hidden="true"></i></button>
+                </div>
+              </div>
+            </div>`;
+            }).join('')}
+          </div>`:`<div class="prog-empty-tasks"><i class="ti ti-clipboard-off"></i>Belum ada tugas. Klik "+ Tugas" untuk menambahkan.</div>`}
+        </div>`;
+      }).join('')}
+      ${!filtered.length?`<div class="empty-state"><div class="empty-icon"><i class="ti ti-folder-off" aria-hidden="true"></i></div><div class="empty-title">${(filterProg||filterJenis||filterArea)?'Tidak ada program dengan filter yang dipilih':'Belum ada program'}</div><div>Buat program baru untuk memulai</div></div>`:''}
+    </div>
+    <div class="ao-panel hidden" id="aoPanel"></div>
+  </div>`;
+}
+function renderPDOApprovals(){
+  const allPending=STATE.tasks.filter(t=>t.pendingApprovals&&Object.values(t.pendingApprovals).some(v=>v));
+  const done=STATE.approvalLog.slice(-20).reverse();
+  const progFilter=document.getElementById('vfProg')?.value||'';
+  const aoFilter=document.getElementById('vfAO')?.value||'';
+  const progOpts=[...new Set(allPending.map(t=>{const p=STATE.programs.find(x=>x.id===t.programId);return p?p.name:''}).filter(Boolean))];
+  const aoOpts=[...new Set(allPending.flatMap(t=>Object.keys(t.pendingApprovals||{}).filter(k=>t.pendingApprovals[k])))];
+  let items=[];
+  allPending.forEach(t=>{
+    const prog=STATE.programs.find(p=>p.id===t.programId)||{};
+    const submitters=Object.keys(t.pendingApprovals||{}).filter(k=>t.pendingApprovals[k]);
+    submitters.forEach(uname=>{
+      if(progFilter&&prog.name!==progFilter) return;
+      if(aoFilter&&uname!==aoFilter) return;
+      items.push({progName:prog.name||'-',prog,uname,t});
+    });
+  });
+  const byProg={};
+  items.forEach(i=>{
+    if(!byProg[i.progName]) byProg[i.progName]={};
+    if(!byProg[i.progName][i.t.id]) byProg[i.progName][i.t.id]={task:i.t,prog:i.prog,aos:[]};
+    byProg[i.progName][i.t.id].aos.push(i.uname);
+  });
+  return `
+  <div class="page-header"><span class="page-title">Verifikasi Tugas AO</span></div>
+  <div class="filter-bar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+    <select id="vfProg" onchange="showTab('approvals')" style="padding:8px 12px;border:1px solid var(--border);border-radius:10px;font-size:13px">
+      <option value="">Semua Program</option>
+      ${progOpts.map(p=>`<option value="${p}"${progFilter===p?' selected':''}>${p}</option>`).join('')}
+    </select>
+    <select id="vfAO" onchange="showTab('approvals')" style="padding:8px 12px;border:1px solid var(--border);border-radius:10px;font-size:13px">
+      <option value="">Semua AO</option>
+      ${aoOpts.map(u=>`<option value="${u}"${aoFilter===u?' selected':''}>${USERS[u]?USERS[u].name:u}</option>`).join('')}
+    </select>
+  </div>
+  <div class="section-label">Menunggu Review (${items.length})</div>
+  ${items.length?Object.entries(byProg).map(([progName,tasks])=>`
+    <div style="margin-bottom:1.25rem">
+      <div style="font-weight:700;font-size:14px;margin-bottom:8px;color:var(--primary)"><i class="ti ti-folder" aria-hidden="true"></i> ${progName}</div>
+      <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="text-align:left;background:var(--bg);border-radius:10px">
+          <th style="padding:10px 12px">Tugas</th>
+          <th style="padding:10px 12px">AO</th>
+          <th style="padding:10px 12px">Catatan</th>
+          <th style="padding:10px 12px">Status</th>
+          <th style="padding:10px 12px;text-align:center">Aksi</th>
+        </tr></thead>
+        <tbody>${Object.values(tasks).flatMap(({task:t,prog,aos})=>aos.map((uname,i)=>`<tr style="border-bottom:0.5px solid var(--color-border-tertiary);background:${i%2?'var(--surface)':'#fafcff'}">
+          <td style="padding:10px 12px">${i===0?`<span style="font-weight:600">${t.nama}</span><br><span style="font-size:11px;color:var(--muted)">${jenisBadge(prog.jenis)}</span>`:''}</td>
+          <td style="padding:10px 12px;white-space:nowrap"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${getAOColor(uname)};margin-right:6px;vertical-align:middle"></span><span style="font-weight:600">${USERS[uname]?USERS[uname].name:uname}</span></td>
+          <td style="padding:10px 12px">${t.aoNotes&&t.aoNotes[uname]?linkify(t.aoNotes[uname]):'-'}</td>
+          <td style="padding:10px 12px">${t.statuses&&t.statuses[uname]?t.statuses[uname]:'belum'}</td>
+          <td style="padding:10px 12px;text-align:center;white-space:nowrap">
+            ${t.bukti?`<a href="${t.bukti}" target="_blank" style="color:#378ADD;font-size:13px;margin-right:6px" title="Lihat Bukti"><i class="ti ti-external-link" aria-hidden="true"></i></a>`:''}
+            <button class="btn btn-xs btn-success" onclick="approveTask('${t.id}','${uname}')" title="Verifikasi"><i class="ti ti-check" aria-hidden="true"></i></button>
+            <button class="btn btn-xs btn-danger" onclick="openModal('rejectTask','${t.id}|${uname}')" title="Tolak"><i class="ti ti-x" aria-hidden="true"></i></button>
+          </td>
+        </tr>`)).join('')}</tbody>
+      </table>
+      </div>
+    </div>`).join(''):`<div class="empty-state" style="padding:2rem"><div class="empty-icon"><i class="ti ti-check-all" aria-hidden="true"></i></div><div class="empty-title">Tidak ada yang perlu direview</div></div>`}
+  <div class="divider"></div>
+  <div class="section-label">Riwayat Verifikasi</div>
+  ${(()=>{
+    const filteredDone=done.filter(l=>{
+      if(progFilter&&l.progName&&l.progName!==progFilter) return false;
+      if(progFilter&&!l.progName){
+        const tn=l.aoName?l.taskName:(l.taskName.includes(' (')?l.taskName.split(' (')[0]:l.taskName);
+        const t=STATE.tasks.find(x=>x.nama===tn);
+        if(!t) return false;
+        const p=STATE.programs.find(x=>x.id===t.programId);
+        if(!p||p.name!==progFilter) return false;
+      }
+      if(aoFilter){
+        const ao=l.aoName||(l.taskName.includes(' (')?l.taskName.split(' (')[1].replace(')',''):'');
+        const aoUname=Object.entries(USERS).find(([,u])=>u.name===ao)?.[0]||ao;
+        if(aoUname!==aoFilter) return false;
+      }
+      return true;
+    });
+    return filteredDone.length?`<div style="margin-bottom:8px;display:flex;justify-content:flex-end"><button class="btn btn-sm btn-danger" onclick="clearAllApprovalLog()"><i class="ti ti-trash" aria-hidden="true"></i> Hapus Semua</button></div><table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="text-align:left;background:var(--bg)">
+      <th style="padding:8px 12px">Status</th>
+      <th style="padding:8px 12px">Program</th>
+      <th style="padding:8px 12px">Tugas</th>
+      <th style="padding:8px 12px">AO</th>
+      <th style="padding:8px 12px">Catatan</th>
+      <th style="padding:8px 12px">Waktu</th>
+      <th style="padding:8px 12px;width:50px"></th>
+    </tr></thead>
+    <tbody>${filteredDone.map(l=>{
+      const ao=l.aoName||(l.taskName.includes(' (')?l.taskName.split(' (')[1].replace(')',''):'-');
+      const tn=l.aoName?l.taskName:(l.taskName.includes(' (')?l.taskName.split(' (')[0]:l.taskName);
+      const pn=l.progName||(()=>{const tx=STATE.tasks.find(x=>x.nama===tn);const px=tx?STATE.programs.find(p=>p.id===tx.programId):null;return px?px.name:'-';})();
+      return `<tr style="border-bottom:0.5px solid var(--color-border-tertiary)">
+      <td style="padding:8px 12px"><span class="badge ${l.action==='approve'?'badge-green':'badge-red'}">${l.action==='approve'?'Terverifikasi':'Ditolak'}</span></td>
+      <td style="padding:8px 12px;color:var(--color-text-secondary);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${pn}</td>
+      <td style="padding:8px 12px">${tn}</td>
+      <td style="padding:8px 12px;white-space:nowrap">${ao}</td>
+      <td style="padding:8px 12px;color:var(--color-text-secondary);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${linkify(l.note)||'-'}</td>
+      <td style="padding:8px 12px;color:var(--color-text-secondary)">${fmtDate(l.at)}</td>
+      <td style="padding:8px 12px"><button class="btn btn-sm btn-danger" onclick="deleteApprovalLog('${l.id}')" style="padding:4px 8px;font-size:12px"><i class="ti ti-trash" aria-hidden="true"></i></button></td>
+    </tr>`;
+    }).join('')}</tbody></table>`:`<div style="font-size:13px;color:var(--color-text-secondary)">Belum ada riwayat.</div>`;
+  })()}`;
+}
+
+function renderExport(){
+  return `
+  <div class="page-header"><span class="page-title">Export Laporan</span></div>
+  <div class="card" style="max-width:500px">
+    <div class="card-title" style="margin-bottom:1rem"><i class="ti ti-download" aria-hidden="true"></i> Download Laporan CSV</div>
+    <div class="field"><label>Filter Area</label>
+      <select id="expArea">
+        <option value="">Semua Area</option>
+        ${[...new Set(STATE.programs.flatMap(p=>getJadwal(p).map(j=>j.area)))].map(a=>`<option value="${a}">${a}</option>`).join('')}
+      </select>
+    </div>
+    <div class="field"><label>Filter AO</label>
+      <select id="expAO">
+        <option value="">Semua AO</option>
+        ${Object.entries(USERS).filter(([,u])=>u.role==='AO').map(([uname,u])=>`<option value="${uname}">${u.name}</option>`).join('')}
+      </select>
+    </div>
+    <div class="field"><label>Filter Status</label>
+      <select id="expStatus">
+        <option value="">Semua Status</option>
+        <option value="belum">Belum</option>
+        <option value="berjalan">Berjalan</option>
+        <option value="selesai">Selesai (Terverifikasi)</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="doExport()"><i class="ti ti-download" aria-hidden="true"></i> Export XLSX</button>
+  </div>`;
+}
+
+function doExport(){
+  const area=document.getElementById('expArea').value;
+  const statusF=document.getElementById('expStatus').value;
+  const aoFilter=document.getElementById('expAO').value;
+  let rows=[['Program','Area','Tugas','Deadline','AO','Status','Catatan AO','Disetujui','Bukti']];
+  STATE.tasks.forEach(t=>{
+    const prog=STATE.programs.find(p=>p.id===t.programId)||{};
+    const progJadwal=getJadwal(prog);
+    const progAreas=progJadwal.map(j=>j.area);
+    if(area&&!progAreas.includes(area)) return;
+    const taskAOs=(t.assignedPICs&&t.assignedPICs.length?t.assignedPICs:prog.assignedAOs)||[];
+    const filteredAOs=aoFilter?taskAOs.filter(a=>a===aoFilter):taskAOs;
+    filteredAOs.forEach(uname=>{
+      const s=t.statuses&&t.statuses[uname]?t.statuses[uname]:'belum';
+      if(statusF==='selesai'&&(s!=='selesai'||!isAOApproved(t,uname))) return;
+      if(statusF==='berjalan'&&s!=='berjalan') return;
+      if(statusF==='belum'&&s!=='belum') return;
+      const note=t.aoNotes&&t.aoNotes[uname]?t.aoNotes[uname]:'';
+      rows.push([prog.name||'',fmtJadwal(progJadwal),t.nama,t.deadline,USERS[uname]?USERS[uname].name:uname,s,note,isAOApproved(t,uname)?'Ya':'Tidak',t.bukti||'']);
+    });
+  });
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  const colW=rows[0].map((_,i)=>Math.max(...rows.map(r=>String(r[i]||'').length))*1.5);
+  ws['!cols']=colW.map(w=>({wch:Math.min(w,50)}));
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Laporan');
+  XLSX.writeFile(wb,'laporan_monitoring.xlsx');
+}
+
+// === USER MANAGEMENT ===
+function renderUsers(){
+  const userList=Object.entries(USERS);
+  return `
+  <div class="page-header">
+    <span class="page-title">User Management</span>
+    <button class="btn btn-primary btn-sm" onclick="openModal('newUser')"><i class="ti ti-user-plus" aria-hidden="true"></i> Tambah User</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Username</th><th>Nama</th><th>Role</th><th>Area</th><th>Akses</th><th></th></tr></thead>
+      <tbody>
+        ${userList.map(([uname,u])=>`<tr>
+          <td><strong>${uname}</strong></td>
+          <td>${u.name}</td>
+          <td><span class="badge ${u.role==='Admin'?'badge-purple':'badge-blue'}">${u.role}</span></td>
+          <td>${Array.isArray(u.area)?u.area.join(', '):(u.area||'-')}</td>
+          <td style="font-size:12px">${Object.entries(u.permissions).filter(([,v])=>v).map(([k])=>k).join(', ')||'-'}</td>
+          <td>${uname!=='admin'?`<button class="btn btn-sm btn-primary" onclick="openModal('editUser','${uname}')"><i class="ti ti-edit" aria-hidden="true"></i></button><button class="btn btn-sm btn-danger" onclick="deleteUser('${uname}')"><i class="ti ti-trash" aria-hidden="true"></i></button>`:'<span style="font-size:12px;color:var(--muted)">-</span>'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function deleteUser(uname){
+  if(!confirm('Hapus user "'+uname+'"?')) return;
+  delete USERS[uname];
+  saveUsers();
+  showTab(activeTab);
+}
+
+function saveUser(){
+  const isEdit=document.getElementById('m_uedit').value==='1';
+  const uname=document.getElementById('m_uuname').value.trim().toLowerCase();
+  const name=document.getElementById('m_uname').value.trim();
+  const pass=document.getElementById('m_upass').value;
+  const area=document.getElementById('m_uarea').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const role=document.getElementById('m_urole').value;
+  if(!uname||!name||(!isEdit&&!pass)){document.getElementById('m_err').textContent='Username, nama, dan password wajib diisi.';document.getElementById('m_err').classList.remove('hidden');return;}
+  if(!isEdit&&USERS[uname]){document.getElementById('m_err').textContent='Username sudah ada.';document.getElementById('m_err').classList.remove('hidden');return;}
+  const permissions={
+    dashboard:!!document.querySelector('[name="perm_dashboard"]:checked'),
+    tasks:!!document.querySelector('[name="perm_tasks"]:checked'),
+    programs:!!document.querySelector('[name="perm_programs"]:checked'),
+    approvals:!!document.querySelector('[name="perm_approvals"]:checked'),
+    export:!!document.querySelector('[name="perm_export"]:checked'),
+    users:!!document.querySelector('[name="perm_users"]:checked')
+  };
+  USERS[uname]={name,password:pass||USERS[uname]?.password||'',role,area,permissions};
+  if(isEdit&&uname!==document.getElementById('m_uold').value){
+    delete USERS[document.getElementById('m_uold').value];
+  }
+  saveUsers();
+  closeModal();
+  showTab(activeTab);
+}
+
+// === AO PAGES ===
+function renderAODashboard(){
+  const myTasks=STATE.tasks.filter(t=>{
+    const prog=STATE.programs.find(p=>p.id===t.programId);
+    if(!prog) return false;
+    const progAreas=getJadwal(prog).map(j=>j.area);
+    if(!progAreas.some(a=>currentUser.area.includes(a))) return false;
+    return !t.assignedPICs||!t.assignedPICs.length||t.assignedPICs.includes(currentUser.username);
+  });
+  const selesai=myTasks.filter(t=>isAOApproved(t,currentUser.username)).length;
+  const pending=myTasks.filter(t=>t.pendingApprovals&&t.pendingApprovals[currentUser.username]&&!isAOApproved(t,currentUser.username)).length;
+  const berjalan=myTasks.filter(t=>getTaskStatus(t,currentUser.username)==='berjalan'&&!isAOApproved(t,currentUser.username)).length;
+  const myProgs=[...new Set(myTasks.map(t=>t.programId))].map(pid=>STATE.programs.find(p=>p.id===pid)).filter(Boolean);
+  return `
+  <div class="page-header"><span class="page-title">Dashboard — Area ${currentUser.area.join(', ')}</span></div>
+  <div class="grid-3" style="margin-bottom:1.5rem">
+    <div class="stat-card"><div class="stat-label">Total Tugas</div><div class="stat-value">${myTasks.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Selesai & Disetujui</div><div class="stat-value">${selesai}</div></div>
+    <div class="stat-card"><div class="stat-label">Sedang Berjalan</div><div class="stat-value" style="color:#185FA5">${berjalan}</div></div>
+    <div class="stat-card"><div class="stat-label">Menunggu Verifikasi</div><div class="stat-value" style="color:#BA7517">${pending}</div></div>
+  </div>
+  ${renderCalendar(myTasks)}
+  <div class="section-label">Program di Area Saya</div>
+  <div class="grid-2">
+    ${myProgs.map(p=>{
+      const prog=getProgProgress(p.id);
+      const ptasks=getProgTasks(p.id);
+      return `<div class="card">
+        <div class="card-title"><i class="ti ti-folder" aria-hidden="true"></i>${p.name}</div>
+        <div class="card-meta">${jenisBadge(p.jenis)} &nbsp;·&nbsp; ${fmtJadwal(getJadwal(p).filter(j=>currentUser.area.includes(j.area)))}</div>
+        ${p.assignedAOs&&p.assignedAOs.length?`<div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:4px"><i class="ti ti-user" aria-hidden="true"></i> ${formatAOs(p.assignedAOs.filter(a=>a===currentUser.username))}</div>`:''}
+        <div class="prog-bar"><div class="prog-fill" style="width:${prog}%"></div></div>
+        <div style="font-size:12px;color:var(--color-text-secondary);text-align:right">${prog}% &nbsp;·&nbsp; ${ptasks.length} tugas</div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function renderAOTasks(){
+  const allTasks=STATE.tasks.filter(t=>{
+    const prog=STATE.programs.find(p=>p.id===t.programId);
+    if(!prog) return false;
+    const progAreas=getJadwal(prog).map(j=>j.area);
+    if(!progAreas.some(a=>currentUser.area.includes(a))) return false;
+    return !t.assignedPICs||!t.assignedPICs.length||t.assignedPICs.includes(currentUser.username);
+  });
+  const vf=document.getElementById('aoTaskVf')?.value||'';
+  let myTasks=allTasks;
+  if(vf==='1') myTasks=allTasks.filter(t=>isAOApproved(t,currentUser.username));
+  else if(vf==='0') myTasks=allTasks.filter(t=>!isAOApproved(t,currentUser.username));
+  else if(vf==='updated') myTasks=allTasks.filter(t=>t.aoNotes&&t.aoNotes[currentUser.username]);
+  else if(vf==='notupdated') myTasks=allTasks.filter(t=>!t.aoNotes||!t.aoNotes[currentUser.username]);
+  if(!myTasks.length) return `<div class="page-header"><span class="page-title">Tugas Saya</span></div><div class="empty-state"><div class="empty-icon"><i class="ti ti-list" aria-hidden="true"></i></div><div class="empty-title">Belum ada tugas di area ini</div></div>`;
+  const grouped={};
+  myTasks.forEach(t=>{
+    if(!grouped[t.programId]) grouped[t.programId]=[];
+    grouped[t.programId].push(t);
+  });
+  const greeting=new Date().getHours()<12?'Selamat Pagi':new Date().getHours()<18?'Selamat Siang':'Selamat Malam';
+  return `
+  <div class="page-header"><span class="page-title">${greeting}, ${USERS[currentUser.username]?USERS[currentUser.username].name:currentUser.username}</span>
+    <select id="aoTaskVf" onchange="showTab('my_tasks')" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px">
+      <option value="">Semua Tugas</option>
+      <option value="notupdated"${vf==='notupdated'?' selected':''}>Belum Update</option>
+      <option value="updated"${vf==='updated'?' selected':''}>Sudah Update</option>
+      <option value="0"${vf==='0'?' selected':''}>Belum Verifikasi</option>
+      <option value="1"${vf==='1'?' selected':''}>Terverifikasi</option>
+    </select>
+  </div>
+  ${Object.entries(grouped).map(([pid,tasks])=>{
+    const prog=STATE.programs.find(p=>p.id===pid)||{};
+    return `<div style="margin-bottom:1.5rem">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.75rem;flex-wrap:wrap">
+        <i class="ti ti-folder" aria-hidden="true" style="color:#378ADD"></i>
+        <span style="font-weight:500">${prog.name||'Program'}</span>
+        ${jenisBadge(prog.jenis)}
+        <span style="font-size:12px;color:var(--color-text-secondary)"><i class="ti ti-map-pin" aria-hidden="true"></i> ${fmtJadwal(getJadwal(prog).filter(j=>currentUser.area.includes(j.area)))}</span>
+        ${prog.assignedAOs&&prog.assignedAOs.length?`<span style="font-size:12px;color:var(--color-text-secondary)"><i class="ti ti-user" aria-hidden="true"></i> ${formatAOs(prog.assignedAOs.filter(a=>a===currentUser.username))}</span>`:''}
+      </div>
+      ${tasks.map(t=>`<div class="task-item">
+        <div class="task-header">
+          <span class="task-name">${t.nama}</span>
+          ${statusBadge(getTaskStatus(t,currentUser.username),isAOApproved(t,currentUser.username))}
+        </div>
+        ${t.catatan?`<div class="task-note"><i class="ti ti-note" aria-hidden="true"></i> ${linkify(t.catatan)}</div>`:''}
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:4px"><i class="ti ti-user" aria-hidden="true"></i> ${formatAOs(t.assignedPICs&&t.assignedPICs.length?t.assignedPICs.filter(a=>a===currentUser.username):[currentUser.username])}</div>
+        ${t.aoNotes&&t.aoNotes[currentUser.username]?`<div class="approval-note" style="margin-bottom:8px"><i class="ti ti-message" aria-hidden="true"></i> Catatan Anda: ${linkify(t.aoNotes[currentUser.username])}</div>`:''}
+        <div class="task-footer">
+          ${deadlineBadge(t.deadline)}
+          ${t.bukti?`<a href="${t.bukti}" target="_blank" style="font-size:12px;color:#378ADD"><i class="ti ti-external-link" aria-hidden="true"></i> Bukti</a>`:''}
+          ${!isAOApproved(t,currentUser.username)?`<button class="btn btn-sm btn-primary" onclick="openModal('updateTask','${t.id}')"><i class="ti ti-edit" aria-hidden="true"></i> Update</button>`:'<span class="badge badge-green"><i class="ti ti-check" aria-hidden="true"></i> Selesai</span>'}
+        </div>
+        ${t.pendingApprovals&&t.pendingApprovals[currentUser.username]&&!isAOApproved(t,currentUser.username)?`<div style="margin-top:8px;font-size:12px;color:#BA7517"><i class="ti ti-clock" aria-hidden="true"></i> Menunggu verifikasi PDO...</div>`:''}
+        ${t.rejectionNotes&&t.rejectionNotes[currentUser.username]?`<div style="margin-top:8px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px 12px">
+          <div style="font-size:11px;font-weight:700;color:#dc2626;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px"><i class="ti ti-x" aria-hidden="true"></i> Ditolak oleh PDO</div>
+          <div style="font-size:13px;color:#991b1b;line-height:1.5">${linkify(t.rejectionNotes[currentUser.username])}</div>
+          <div style="font-size:12px;color:#991b1b;margin-top:6px"><i class="ti ti-refresh" aria-hidden="true"></i> Silakan perbaiki dan kirim ulang</div>
+        </div>`:''}
+      </div>`).join('')}
+    </div>`;
+  }).join('')}`;
+}
+
+// === ACTIONS ===
+function approveTask(id,uname){
+  const t=STATE.tasks.find(x=>x.id===id);
+  if(!t) return;
+  if(!t.approvals) t.approvals={};
+  t.approvals[uname]=true;
+  if(t.pendingApprovals) delete t.pendingApprovals[uname];
+  const p=STATE.programs.find(x=>x.id===t.programId);
+  STATE.approvalLog.push({id:genId(),taskName:t.nama,aoName:USERS[uname]?USERS[uname].name:uname,progName:p?p.name:'-',action:'approve',at:today(),note:''});
+  saveState();
+  showTab(activeTab);
+}
+
+function deleteTask(id){
+  if(!confirm('Hapus tugas ini?')) return;
+  STATE.tasks=STATE.tasks.filter(t=>t.id!==id);
+  saveState();
+  showTab(activeTab);
+}
+function deleteApprovalLog(id){
+  if(!confirm('Hapus riwayat ini?')) return;
+  STATE.approvalLog=STATE.approvalLog.filter(l=>l.id!==id);
+  saveState();
+  showTab(activeTab);
+}
+function toggleAll(c,on){
+  document.querySelectorAll('.'+c).forEach(cb=>{
+    cb.checked=on;
+    if(c==='m_area_cb'){
+      const p=cb.closest('.jadwal-row,.area-row');
+      if(p){p.style.borderColor=on?'var(--primary)':'#e2e8f0';p.style.background=on?'#eef2ff':'#fff'}
+      const dp=cb.closest('div');
+      if(dp&&!p){dp.style.borderColor=on?'var(--primary)':'#e2e8f0';dp.style.background=on?'#eef2ff':'#fff'}
+      const jr=cb.closest('.jadwal-row');
+      if(jr&&typeof toggleJadwalRow==='function') toggleJadwalRow(cb);
+    }
+  });
+}
+function clearAllApprovalLog(){
+  if(!confirm('Hapus semua riwayat verifikasi?')) return;
+  STATE.approvalLog=[];
+  saveState();
+  showTab(activeTab);
+}
+function deleteProgram(id){
+  if(!confirm('Hapus program ini beserta semua tugasnya?')) return;
+  STATE.programs=STATE.programs.filter(p=>p.id!==id);
+  STATE.tasks=STATE.tasks.filter(t=>t.programId!==id);
+  saveState();
+  showTab(activeTab);
+}
+
+// === MODALS ===
+function openModal(type, arg){
+  const overlay=document.getElementById('modalOverlay');
+  const mc=document.getElementById('modalContent');
+  overlay.classList.remove('hidden');
+  if(type==='newProgram'){
+const aoList=Object.entries(USERS).filter(([,u])=>u.role==='AO');
+    const allAreas=[...new Set(Object.values(USERS).filter(a=>a.role==='AO').flatMap(a=>Array.isArray(a.area)?a.area:(a.area?[a.area]:[])).filter(Boolean))];
+    mc.innerHTML=`
+    <div class="modal-title"><i class="ti ti-folder-plus" aria-hidden="true"></i> Buat Program Baru</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="field"><label>Nama Program</label><input type="text" id="m_name" placeholder="Nama program"></div>
+      <div class="field"><label>Jenis Program</label>
+        <select id="m_jenis">
+          <option value="Program Development">Program Development</option>
+          <option value="Akademik">Akademik (SD & SMP)</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Waktu</label>
+      <select id="m_waktu" onchange="toggleWaktuMode(this.value)">
+        <option value="">Pilih waktu...</option>
+        <option value="sama">Sama (satu tanggal untuk area terpilih)</option>
+        <option value="beda">Berbeda per area</option>
+      </select>
+    </div>
+    <div id="m_area_wrapper" style="display:none">
+      <div id="m_area_sama" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <label style="font-weight:700;font-size:13px">Pilih Area</label>
+          <span style="font-size:12px"><a href="#" onclick="event.preventDefault();toggleAll('m_area_cb',true)" style="color:var(--primary);cursor:pointer">Pilih Semua</a> · <a href="#" onclick="event.preventDefault();toggleAll('m_area_cb',false)" style="color:var(--muted);cursor:pointer">Hapus</a></span>
+        </div>
+        <div style="background:var(--bg);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px">
+          ${allAreas.map(a=>`<div class="area-row" style="display:flex;align-items:center;gap:8px;background:#fff;border:2px solid #e2e8f0;border-radius:12px;padding:8px 12px;transition:.15s">
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;min-width:100px;user-select:none"><input type="checkbox" class="m_area_cb" value="${a}" onchange="this.closest('.area-row').style.borderColor=this.checked?'var(--primary)':'#e2e8f0';this.closest('.area-row').style.background=this.checked?'#eef2ff':'#fff'"> ${a}</label>
+          </div>`).join('')}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
+          <div><label style="display:block;margin-bottom:6px;font-size:13px;font-weight:700;color:#475569">Tanggal Mulai</label><input type="date" id="m_tglMulai" style="width:100%;padding:14px 16px;border:1px solid #dbe3ef;border-radius:14px;font-size:14px"></div>
+          <div><label style="display:block;margin-bottom:6px;font-size:13px;font-weight:700;color:#475569">Tanggal Selesai</label><input type="date" id="m_tglSelesai" style="width:100%;padding:14px 16px;border:1px solid #dbe3ef;border-radius:14px;font-size:14px"></div>
+        </div>
+      </div>
+      <div id="m_area_beda" style="display:none">
+        <label style="margin-bottom:8px;font-weight:700;font-size:13px">Pilih Area & Tanggal</label>
+        <div style="background:var(--bg);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px">
+          ${allAreas.map(a=>`<div class="jadwal-row" data-area="${a}" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff;border:2px solid #e2e8f0;border-radius:12px;padding:8px 12px;transition:.15s">
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;min-width:100px;user-select:none"><input type="checkbox" class="m_area_cb" value="${a}" onchange="this.closest('.jadwal-row').style.borderColor=this.checked?'var(--primary)':'#e2e8f0';toggleJadwalRow(this)"> ${a}</label>
+            <input type="date" class="m_tglMulai jadwal-date" style="display:none;padding:6px 10px;border:1px solid var(--border);border-radius:10px;font-size:12px">
+            <span class="jadwal-date" style="display:none;font-size:12px;color:var(--muted)">-</span>
+            <input type="date" class="m_tglSelesai jadwal-date" style="display:none;padding:6px 10px;border:1px solid var(--border);border-radius:10px;font-size:12px">
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <label style="font-weight:700;font-size:13px">Assign AO</label>
+        <span style="font-size:12px"><a href="#" onclick="event.preventDefault();toggleAll('m_ao_cb',true)" style="color:var(--primary);cursor:pointer">Pilih Semua</a> · <a href="#" onclick="event.preventDefault();toggleAll('m_ao_cb',false)" style="color:var(--muted);cursor:pointer">Hapus</a></span>
+      </div>
+      <div class="chip-grid">
+        ${aoList.map(([uname,u])=>`<div class="chip-item"><input type="checkbox" class="m_ao_cb" value="${uname}"><label>${u.name}</label></div>`).join('')}
+      </div>
+    </div>
+    <div class="field"><label style="font-weight:700;font-size:13px;color:#475569">Catatan</label><textarea id="m_catatan" rows="3" placeholder="Catatan atau instruksi untuk AO" style="width:100%;padding:14px 16px;border:1px solid #dbe3ef;border-radius:14px;font-size:14px;background:#fff"></textarea></div>
+    <div id="m_err" class="err hidden"></div>
+    <div class="modal-footer">
+      <button class="btn btn-sm" onclick="closeModal()">Batal</button>
+      <button class="btn btn-sm btn-primary" onclick="saveProgram()"><i class="ti ti-check" aria-hidden="true"></i> Simpan</button>
+    </div>`;
+  } else if(type==='editProgram'){
+    const prog=STATE.programs.find(x=>x.id===arg);
+    const aoList2=Object.entries(USERS).filter(([,u])=>u.role==='AO');
+    const progJadwal=getJadwal(prog);
+    const allAreaOpts2=[...new Set(Object.values(USERS).filter(a=>a.role==='AO').flatMap(a=>Array.isArray(a.area)?a.area:(a.area?[a.area]:[])).filter(Boolean))];
+    const jadwalSama=progJadwal.length>0&&progJadwal.every(j=>j.tglMulai===progJadwal[0].tglMulai&&j.tglSelesai===progJadwal[0].tglSelesai);
+    const waktuMode=jadwalSama?'sama':'beda';
+    const waktuSamaStyle=waktuMode==='sama'?'grid':'none';
+    const waktuBedaStyle=waktuMode==='beda'?'':'none';
+    const samaMulai=jadwalSama&&progJadwal[0]?progJadwal[0].tglMulai:'';
+    const samaSelesai=jadwalSama&&progJadwal[0]?progJadwal[0].tglSelesai:'';
+    mc.innerHTML=`
+    <div class="modal-title"><i class="ti ti-edit" aria-hidden="true"></i> Edit Program</div>
+    <input type="hidden" id="m_pid_edit" value="${arg}">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="field"><label>Nama Program</label><input type="text" id="m_name" value="${prog.name}"></div>
+      <div class="field"><label>Jenis Program</label>
+        <select id="m_jenis">
+          <option value="Program Development"${prog.jenis==='Program Development'?' selected':''}>Program Development</option>
+          <option value="Akademik"${prog.jenis==='Akademik'?' selected':''}>Akademik (SD & SMP)</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Waktu</label>
+      <select id="m_waktu" onchange="toggleWaktuMode(this.value)">
+        <option value="" ${!waktuMode?'selected':''}>Pilih waktu...</option>
+        <option value="sama" ${waktuMode==='sama'?'selected':''}>Sama (satu tanggal untuk area terpilih)</option>
+        <option value="beda" ${waktuMode==='beda'?'selected':''}>Berbeda per area</option>
+      </select>
+    </div>
+    <div id="m_area_wrapper" style="display:${waktuMode?'':'none'}">
+      <div id="m_area_sama" style="display:${waktuMode==='sama'?'':'none'}">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <label style="font-weight:700;font-size:13px">Pilih Area</label>
+          <span style="font-size:12px"><a href="#" onclick="event.preventDefault();toggleAll('m_area_cb',true)" style="color:var(--primary);cursor:pointer">Pilih Semua</a> · <a href="#" onclick="event.preventDefault();toggleAll('m_area_cb',false)" style="color:var(--muted);cursor:pointer">Hapus</a></span>
+        </div>
+        <div style="background:var(--bg);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px">
+          ${allAreaOpts2.map(a=>{const chk=progJadwal.some(j=>j.area===a)?'checked':'';return `<div class="area-row" style="display:flex;align-items:center;gap:8px;background:${chk?'#eef2ff':'#fff'};border:2px solid ${chk?'var(--primary)':'#e2e8f0'};border-radius:12px;padding:8px 12px;transition:.15s">
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;min-width:100px;user-select:none"><input type="checkbox" class="m_area_cb" value="${a}" ${chk} onchange="this.closest('.area-row').style.borderColor=this.checked?'var(--primary)':'#e2e8f0';this.closest('.area-row').style.background=this.checked?'#eef2ff':'#fff'"> ${a}</label>
+          </div>`;}).join('')}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
+          <div><label style="display:block;margin-bottom:6px;font-size:13px;font-weight:700;color:#475569">Tanggal Mulai</label><input type="date" id="m_tglMulai" value="${samaMulai}" style="width:100%;padding:14px 16px;border:1px solid #dbe3ef;border-radius:14px;font-size:14px"></div>
+          <div><label style="display:block;margin-bottom:6px;font-size:13px;font-weight:700;color:#475569">Tanggal Selesai</label><input type="date" id="m_tglSelesai" value="${samaSelesai}" style="width:100%;padding:14px 16px;border:1px solid #dbe3ef;border-radius:14px;font-size:14px"></div>
+        </div>
+      </div>
+      <div id="m_area_beda" style="display:${waktuMode==='beda'?'':'none'}">
+        <label style="margin-bottom:8px;font-weight:700;font-size:13px">Pilih Area & Tanggal</label>
+        <div style="background:var(--bg);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px">
+          ${allAreaOpts2.map(a=>{const j=progJadwal.find(x=>x.area===a);const ch=j?'checked':'';return `<div class="jadwal-row" data-area="${a}" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff;border:2px solid ${ch?'var(--primary)':'#e2e8f0'};border-radius:12px;padding:8px 12px;transition:.15s">
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;min-width:100px;user-select:none"><input type="checkbox" class="m_area_cb" value="${a}" ${ch} onchange="this.closest('.jadwal-row').style.borderColor=this.checked?'var(--primary)':'#e2e8f0';toggleJadwalRow(this)"> ${a}</label>
+            <input type="date" class="m_tglMulai jadwal-date" value="${j?j.tglMulai:''}" style="${ch?'':'display:none;'}padding:6px 10px;border:1px solid var(--border);border-radius:10px;font-size:12px">
+            <span class="jadwal-date" style="${ch?'':'display:none;'}font-size:12px;color:var(--muted)">-</span>
+            <input type="date" class="m_tglSelesai jadwal-date" value="${j?j.tglSelesai:''}" style="${ch?'':'display:none;'}padding:6px 10px;border:1px solid var(--border);border-radius:10px;font-size:12px">
+          </div>`;}).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <label style="font-weight:700;font-size:13px">Assign AO</label>
+        <span style="font-size:12px"><a href="#" onclick="event.preventDefault();toggleAll('m_ao_cb',true)" style="color:var(--primary);cursor:pointer">Pilih Semua</a> · <a href="#" onclick="event.preventDefault();toggleAll('m_ao_cb',false)" style="color:var(--muted);cursor:pointer">Hapus</a></span>
+      </div>
+      <div class="chip-grid">
+        ${aoList2.map(([uname,u])=>`<div class="chip-item"><input type="checkbox" class="m_ao_cb" value="${uname}" ${(prog.assignedAOs||[]).includes(uname)?'checked':''}><label>${u.name}</label></div>`).join('')}
+      </div>
+    </div>
+    <div class="field"><label style="font-weight:700;font-size:13px;color:#475569">Catatan</label><textarea id="m_catatan" rows="3" style="width:100%;padding:14px 16px;border:1px solid #dbe3ef;border-radius:14px;font-size:14px;background:#fff">${prog.catatan||''}</textarea></div>
+    <div id="m_err" class="err hidden"></div>
+    <div class="modal-footer">
+      <button class="btn btn-sm" onclick="closeModal()">Batal</button>
+      <button class="btn btn-sm btn-primary" onclick="saveProgramEdit()"><i class="ti ti-check" aria-hidden="true"></i> Simpan Perubahan</button>
+    </div>`;
+  } else if(type==='addTask'){
+    const progPICs=STATE.programs.find(x=>x.id===arg);
+    const picList=(progPICs?progPICs.assignedAOs:[])||[];
+    mc.innerHTML=`
+    <div class="modal-title"><i class="ti ti-plus" aria-hidden="true"></i> Tambah Tugas</div>
+    <input type="hidden" id="m_pid" value="${arg}">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="field"><label>Nama Tugas</label><input type="text" id="m_tname" placeholder="Nama tugas"></div>
+      <div class="field"><label>Deadline</label><input type="date" id="m_tdeadline"></div>
+    </div>
+    ${picList.length?`<div class="field">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <label style="font-weight:700;font-size:13px">PIC (Penanggung Jawab)</label>
+        <span style="font-size:12px"><a href="#" onclick="event.preventDefault();toggleAll('m_pic_cb',true)" style="color:var(--primary);cursor:pointer">Pilih Semua</a> · <a href="#" onclick="event.preventDefault();toggleAll('m_pic_cb',false)" style="color:var(--muted);cursor:pointer">Hapus</a></span>
+      </div>
+      <div class="chip-grid">
+        ${picList.map(uname=>{const u=USERS[uname];return u?`<div class="chip-item"><input type="checkbox" class="m_pic_cb" value="${uname}" checked><label>${u.name}</label></div>`:'';}).join('')}
+      </div>
+    </div>`:''}
+    <div class="field"><label style="font-weight:700;font-size:13px;color:#475569">Catatan</label><textarea id="m_tcatatan" rows="3" placeholder="Instruksi atau catatan untuk AO" style="width:100%;padding:14px 16px;border:1px solid #dbe3ef;border-radius:14px;font-size:14px;background:#fff"></textarea></div>
+    <div id="m_err" class="err hidden"></div>
+    <div class="modal-footer">
+      <button class="btn btn-sm" onclick="closeModal()">Batal</button>
+      <button class="btn btn-sm btn-primary" onclick="saveTask()"><i class="ti ti-check" aria-hidden="true"></i> Simpan</button>
+    </div>`;
+  } else if(type==='editTask'){
+    const et=STATE.tasks.find(x=>x.id===arg);
+    const eProg=STATE.programs.find(x=>x.id===et.programId);
+    const ePicList=(eProg?eProg.assignedAOs:[])||[];
+    const eTaskPics=et.assignedPICs||[];
+    mc.innerHTML=`
+    <div class="modal-title"><i class="ti ti-edit" aria-hidden="true"></i> Edit Tugas</div>
+    <input type="hidden" id="m_tid_edit" value="${arg}">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="field"><label>Nama Tugas</label><input type="text" id="m_tname" value="${et.nama}"></div>
+      <div class="field"><label>Deadline</label><input type="date" id="m_tdeadline" value="${et.deadline}"></div>
+    </div>
+    ${ePicList.length?`<div class="field">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <label style="font-weight:700;font-size:13px">PIC (Penanggung Jawab)</label>
+        <span style="font-size:12px"><a href="#" onclick="event.preventDefault();toggleAll('m_pic_cb',true)" style="color:var(--primary);cursor:pointer">Pilih Semua</a> · <a href="#" onclick="event.preventDefault();toggleAll('m_pic_cb',false)" style="color:var(--muted);cursor:pointer">Hapus</a></span>
+      </div>
+      <div class="chip-grid">
+        ${ePicList.map(uname=>{const u=USERS[uname];return u?`<div class="chip-item"><input type="checkbox" class="m_pic_cb" value="${uname}" ${eTaskPics.includes(uname)?'checked':''}><label>${u.name}</label></div>`:'';}).join('')}
+      </div>
+    </div>`:''}
+    <div class="field"><label style="font-weight:700;font-size:13px;color:#475569">Catatan</label><textarea id="m_tcatatan" rows="3" style="width:100%;padding:14px 16px;border:1px solid #dbe3ef;border-radius:14px;font-size:14px;background:#fff">${et.catatan||''}</textarea></div>
+    <div id="m_err" class="err hidden"></div>
+    <div class="modal-footer">
+      <button class="btn btn-sm" onclick="closeModal()">Batal</button>
+      <button class="btn btn-sm btn-primary" onclick="saveTaskEdit()"><i class="ti ti-check" aria-hidden="true"></i> Simpan Perubahan</button>
+    </div>`;
+  } else if(type==='updateTask'){
+    const t=STATE.tasks.find(x=>x.id===arg);
+    const prog=STATE.programs.find(x=>x.id===t.programId);
+    mc.innerHTML=`
+    <div class="modal-title"><i class="ti ti-edit" aria-hidden="true"></i> Update Tugas</div>
+    <input type="hidden" id="m_tid" value="${arg}">
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;margin-bottom:16px">
+      <div style="font-size:13px;color:#334155;margin-bottom:6px"><i class="ti ti-folder" aria-hidden="true"></i> <strong>${prog?prog.name:'-'}</strong></div>
+      ${t.catatan?`<div style="font-size:12px;font-weight:700;color:#64748b;margin-bottom:4px;margin-top:8px"><i class="ti ti-notes" aria-hidden="true"></i> Catatan dari pembuat tugas</div>
+      <div style="font-size:14px;color:#334155;line-height:1.5">${linkify(t.catatan)}</div>`:''}
+    </div>
+    ${t.rejectionNotes&&t.rejectionNotes[currentUser.username]?`<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:14px 16px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:#dc2626;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px"><i class="ti ti-x" aria-hidden="true"></i> Alasan Ditolak oleh PDO</div>
+      <div style="font-size:14px;color:#991b1b;line-height:1.5">${linkify(t.rejectionNotes[currentUser.username])}</div>
+      <div style="font-size:13px;color:#991b1b;font-weight:600;margin-top:8px"><i class="ti ti-refresh" aria-hidden="true"></i> Silakan perbaiki berdasarkan catatan di atas, lalu kirim ulang untuk diverifikasi kembali</div>
+    </div>`:''}
+    <div class="field"><label>Status</label>
+      <select id="m_tstatus">
+        <option value="belum"${getTaskStatus(t,currentUser.username)==='belum'?' selected':''}>Belum dimulai</option>
+        <option value="berjalan"${getTaskStatus(t,currentUser.username)==='berjalan'?' selected':''}>Sedang berjalan</option>
+        <option value="selesai"${getTaskStatus(t,currentUser.username)==='selesai'?' selected':''}>Selesai</option>
+      </select>
+    </div>
+    <div class="field"><label style="font-weight:700;font-size:13px;color:#475569">Catatan update</label><textarea id="m_tnote" rows="3" placeholder="Jelaskan perkembangan atau hasil" style="width:100%;padding:14px 16px;border:1px solid #dbe3ef;border-radius:14px;font-size:14px;background:#fff">${(t.aoNotes&&t.aoNotes[currentUser.username])||''}</textarea></div>
+    <div class="field"><label style="font-weight:700;font-size:13px;color:#475569">Link Bukti (URL)</label><input type="text" id="m_tbukti" value="${t.bukti||''}" placeholder="https://drive.google.com/..." style="width:100%;padding:14px 16px;border:1px solid #dbe3ef;border-radius:14px;font-size:14px;background:#fff"></div>
+    <div id="m_err" class="err hidden"></div>
+    <div class="modal-footer">
+      <button class="btn btn-sm" onclick="closeModal()">Batal</button>
+      <button class="btn btn-sm btn-primary" onclick="saveTaskUpdate()"><i class="ti ti-send" aria-hidden="true"></i> Kirim untuk Verifikasi</button>
+    </div>`;
+  } else if(type==='rejectTask'){
+    const parts=arg.split('|');
+    const tid=parts[0];
+    const runame=parts[1]||'';
+    mc.innerHTML=`
+    <div class="modal-title"><i class="ti ti-x" aria-hidden="true"></i> Tolak Update${runame?' — '+(USERS[runame]?USERS[runame].name:runame):''}</div>
+    <input type="hidden" id="m_rid" value="${tid}">
+    <input type="hidden" id="m_runame" value="${runame}">
+    <div class="field"><label>Alasan penolakan</label><textarea id="m_rnote" rows="3" placeholder="Berikan alasan agar AO bisa memperbaiki"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-sm" onclick="closeModal()">Batal</button>
+      <button class="btn btn-sm btn-danger" onclick="rejectTask()"><i class="ti ti-x" aria-hidden="true"></i> Tolak</button>
+    </div>`;
+  } else if(type==='newUser'||type==='editUser'){
+    const isEdit=type==='editUser';
+    const u=isEdit?USERS[arg]:null;
+    mc.innerHTML=`
+    <div class="modal-title"><i class="ti ti-${isEdit?'edit':'user-plus'}" aria-hidden="true"></i> ${isEdit?'Edit User':'Tambah User Baru'}</div>
+    <input type="hidden" id="m_uedit" value="${isEdit?'1':'0'}">
+    ${isEdit?`<input type="hidden" id="m_uold" value="${arg}">`:''}
+    <div class="field"><label>Username</label><input type="text" id="m_uuname" value="${isEdit?arg:''}" placeholder="username" ${isEdit?'readonly style="background:#f1f5f9"':''}></div>
+    <div class="field"><label>Nama Lengkap</label><input type="text" id="m_uname" value="${isEdit?u.name:''}" placeholder="Nama lengkap"></div>
+    <div class="field"><label>Password ${isEdit?'(kosongkan jika tidak diubah)':''}</label><input type="password" id="m_upass" placeholder="password"></div>
+    <div class="field"><label>Role</label>
+      <select id="m_urole">
+        <option value="AO"${isEdit&&u.role==='AO'?' selected':''}>AO</option>
+        <option value="Admin"${isEdit&&u.role==='Admin'?' selected':''}>Admin</option>
+      </select>
+    </div>
+    <div class="field"><label>Area</label><input type="text" id="m_uarea" value="${isEdit?(Array.isArray(u.area)?u.area.join(', '):u.area||''):''}" placeholder="Pisahkan dengan koma jika lebih dari satu (contoh: Surabaya, Jakarta)"></div>
+    <div class="field">
+      <label style="margin-bottom:12px"><i class="ti ti-lock" style="margin-right:6px;color:var(--primary)"></i>Akses Menu</label>
+      <div class="perm-grid" id="m_perm_grid">
+        <div class="perm-item${isEdit&&u.permissions.tasks?' checked':''}" onclick="this.classList.toggle('checked');this.querySelector('input').checked=!this.querySelector('input').checked;this.querySelector('.perm-toggle').className='perm-toggle '+(this.querySelector('input').checked?'on':'off')">
+          <div class="perm-info"><i class="ti ti-checklist"></i><div><div class="perm-label">Tugas</div><div class="perm-desc">Lihat & update tugas</div></div></div>
+          <div class="perm-toggle ${isEdit&&u.permissions.tasks?'on':'off'}"></div>
+          <input type="checkbox" name="perm_tasks" ${isEdit&&u.permissions.tasks?'checked':''}>
+        </div>
+        <div class="perm-item${isEdit&&u.permissions.programs?' checked':''}" onclick="this.classList.toggle('checked');this.querySelector('input').checked=!this.querySelector('input').checked;this.querySelector('.perm-toggle').className='perm-toggle '+(this.querySelector('input').checked?'on':'off')">
+          <div class="perm-info"><i class="ti ti-folder"></i><div><div class="perm-label">Program</div><div class="perm-desc">Kelola program</div></div></div>
+          <div class="perm-toggle ${isEdit&&u.permissions.programs?'on':'off'}"></div>
+          <input type="checkbox" name="perm_programs" ${isEdit&&u.permissions.programs?'checked':''}>
+        </div>
+        <div class="perm-item${isEdit&&u.permissions.approvals?' checked':''}" onclick="this.classList.toggle('checked');this.querySelector('input').checked=!this.querySelector('input').checked;this.querySelector('.perm-toggle').className='perm-toggle '+(this.querySelector('input').checked?'on':'off')">
+          <div class="perm-info"><i class="ti ti-circle-check"></i><div><div class="perm-label">Verifikasi</div><div class="perm-desc">Setujui / tolak tugas</div></div></div>
+          <div class="perm-toggle ${isEdit&&u.permissions.approvals?'on':'off'}"></div>
+          <input type="checkbox" name="perm_approvals" ${isEdit&&u.permissions.approvals?'checked':''}>
+        </div>
+        <div class="perm-item${isEdit&&u.permissions.export?' checked':''}" onclick="this.classList.toggle('checked');this.querySelector('input').checked=!this.querySelector('input').checked;this.querySelector('.perm-toggle').className='perm-toggle '+(this.querySelector('input').checked?'on':'off')">
+          <div class="perm-info"><i class="ti ti-download"></i><div><div class="perm-label">Export</div><div class="perm-desc">Download laporan</div></div></div>
+          <div class="perm-toggle ${isEdit&&u.permissions.export?'on':'off'}"></div>
+          <input type="checkbox" name="perm_export" ${isEdit&&u.permissions.export?'checked':''}>
+        </div>
+        <div class="perm-item${isEdit&&u.permissions.users?' checked':''}" onclick="this.classList.toggle('checked');this.querySelector('input').checked=!this.querySelector('input').checked;this.querySelector('.perm-toggle').className='perm-toggle '+(this.querySelector('input').checked?'on':'off')">
+          <div class="perm-info"><i class="ti ti-users"></i><div><div class="perm-label">Users</div><div class="perm-desc">Kelola akun user</div></div></div>
+          <div class="perm-toggle ${isEdit&&u.permissions.users?'on':'off'}"></div>
+          <input type="checkbox" name="perm_users" ${isEdit&&u.permissions.users?'checked':''}>
+        </div>
+        <div class="perm-item disabled">
+          <div class="perm-info"><i class="ti ti-dashboard"></i><div><div class="perm-label">Dashboard</div><div class="perm-desc">Selalu aktif</div></div></div>
+          <div class="perm-toggle on"></div>
+          <input type="checkbox" name="perm_dashboard" checked disabled>
+        </div>
+      </div>
+    </div>
+    <div id="m_err" class="err hidden"></div>
+    <div class="modal-footer">
+      <button class="btn btn-sm" onclick="closeModal()">Batal</button>
+      <button class="btn btn-sm btn-primary" onclick="saveUser()"><i class="ti ti-check" aria-hidden="true"></i> Simpan</button>
+    </div>`;
+  }
+}
+function closeModal(){document.getElementById('modalOverlay').classList.add('hidden')}
+
+function saveProgram(){
+  const name=document.getElementById('m_name').value.trim();
+  const jenis=document.getElementById('m_jenis').value;
+  const catatan=document.getElementById('m_catatan').value.trim();
+  const waktuVal=document.getElementById('m_waktu').value;
+  const areaRoot=waktuVal?document.getElementById('m_area_'+(waktuVal==='sama'?'sama':'beda')):null;
+  const areas=[...(areaRoot?areaRoot.querySelectorAll('.m_area_cb:checked'):[])].map(cb=>cb.value);
+  if(!name||!areas.length){document.getElementById('m_err').textContent='Nama program dan minimal satu area wajib diisi.';document.getElementById('m_err').classList.remove('hidden');return;}
+  const jadwal=[];
+  if(waktuVal==='sama'){
+    const tm=document.getElementById('m_tglMulai').value;
+    const ts=document.getElementById('m_tglSelesai').value;
+    areas.forEach(a=>jadwal.push({area:a,tglMulai:tm,tglSelesai:ts}));
+  } else {
+    areas.forEach(a=>{
+      const row=document.querySelector(`.jadwal-row[data-area="${a}"]`);
+      jadwal.push({area:a,tglMulai:row?row.querySelector('.m_tglMulai').value:'',tglSelesai:row?row.querySelector('.m_tglSelesai').value:''});
+    });
+  }
+  const assignedAOs=[...document.querySelectorAll('.m_ao_cb:checked')].map(cb=>cb.value);
+  STATE.programs.push({id:genId(),name,jenis,jadwal,catatan,createdAt:today(),assignedAOs});
+  saveState();closeModal();showTab(activeTab);
+}
+
+function saveProgramEdit(){
+  const id=document.getElementById('m_pid_edit').value;
+  const prog=STATE.programs.find(x=>x.id===id);
+  if(!prog) return;
+  prog.name=document.getElementById('m_name').value.trim();
+  prog.jenis=document.getElementById('m_jenis').value;
+  prog.catatan=document.getElementById('m_catatan').value.trim();
+  const waktuVal=document.getElementById('m_waktu').value;
+  const areaRoot=waktuVal?document.getElementById('m_area_'+(waktuVal==='sama'?'sama':'beda')):null;
+  const areas=[...(areaRoot?areaRoot.querySelectorAll('.m_area_cb:checked'):[])].map(cb=>cb.value);
+  if(!prog.name||!areas.length){document.getElementById('m_err').textContent='Nama program dan minimal satu area wajib diisi.';document.getElementById('m_err').classList.remove('hidden');return;}
+  prog.jadwal=[];
+  if(waktuVal==='sama'){
+    const tm=document.getElementById('m_tglMulai').value;
+    const ts=document.getElementById('m_tglSelesai').value;
+    areas.forEach(a=>prog.jadwal.push({area:a,tglMulai:tm,tglSelesai:ts}));
+  } else {
+    areas.forEach(a=>{
+      const row=document.querySelector(`.jadwal-row[data-area="${a}"]`);
+      prog.jadwal.push({area:a,tglMulai:row?row.querySelector('.m_tglMulai').value:'',tglSelesai:row?row.querySelector('.m_tglSelesai').value:''});
+    });
+  }
+  prog.assignedAOs=[...document.querySelectorAll('.m_ao_cb:checked')].map(cb=>cb.value);
+  saveState();closeModal();showTab(activeTab);
+}
+
+function saveTask(){
+  const pid=document.getElementById('m_pid').value;
+  const nama=document.getElementById('m_tname').value.trim();
+  const deadline=document.getElementById('m_tdeadline').value;
+  const catatan=document.getElementById('m_tcatatan').value.trim();
+  const assignedPICs=[...document.querySelectorAll('.m_pic_cb:checked')].map(cb=>cb.value);
+  if(!nama||!deadline){document.getElementById('m_err').textContent='Nama dan deadline wajib diisi.';document.getElementById('m_err').classList.remove('hidden');return;}
+  STATE.tasks.push({id:genId(),programId:pid,nama,deadline,catatan,assignedPICs,statuses:{},aoNotes:{},bukti:'',pendingApprovals:{},approvals:{},rejectionNotes:{},updatedAt:''});
+  saveState();closeModal();showTab(activeTab);
+}
+
+function saveTaskEdit(){
+  const id=document.getElementById('m_tid_edit').value;
+  const t=STATE.tasks.find(x=>x.id===id);
+  if(!t) return;
+  t.nama=document.getElementById('m_tname').value.trim();
+  t.deadline=document.getElementById('m_tdeadline').value;
+  t.catatan=document.getElementById('m_tcatatan').value.trim();
+  t.assignedPICs=[...document.querySelectorAll('.m_pic_cb:checked')].map(cb=>cb.value);
+  if(!t.nama||!t.deadline){document.getElementById('m_err').textContent='Nama dan deadline wajib diisi.';document.getElementById('m_err').classList.remove('hidden');return;}
+  saveState();closeModal();showTab(activeTab);
+}
+
+function saveTaskUpdate(){
+  const id=document.getElementById('m_tid').value;
+  const status=document.getElementById('m_tstatus').value;
+  const note=document.getElementById('m_tnote').value.trim();
+  const bukti=document.getElementById('m_tbukti').value.trim();
+  const t=STATE.tasks.find(x=>x.id===id);
+  if(!t) return;
+  if(!t.statuses) t.statuses={};
+  t.statuses[currentUser.username]=status;
+  if(!t.aoNotes) t.aoNotes={};
+  t.aoNotes[currentUser.username]=note;
+  t.bukti=bukti;
+  t.pendingApprovals[currentUser.username]=true;
+  delete t.approvals[currentUser.username];
+  if(t.rejectionNotes) delete t.rejectionNotes[currentUser.username];
+  t.updatedAt=today();
+  saveState();closeModal();showTab(activeTab);
+}
+
+function rejectTask(){
+  const id=document.getElementById('m_rid').value;
+  const runame=document.getElementById('m_runame').value;
+  const note=document.getElementById('m_rnote').value.trim();
+  const t=STATE.tasks.find(x=>x.id===id);
+  if(!t) return;
+  if(t.pendingApprovals) delete t.pendingApprovals[runame];
+  if(!t.rejectionNotes) t.rejectionNotes={};
+  t.rejectionNotes[runame]=note||'Ditolak oleh PDO.';
+  const p=STATE.programs.find(x=>x.id===t.programId);
+  STATE.approvalLog.push({id:genId(),taskName:t.nama,aoName:USERS[runame]?USERS[runame].name:runame,progName:p?p.name:'-',action:'reject',at:today(),note:note||'Ditolak oleh PDO.'});
+  saveState();closeModal();showTab(activeTab);
+}
+
+document.getElementById('modalOverlay').addEventListener('click',function(e){
+  if(e.target===this) closeModal();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape') closeModal();});
+document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter') doLogin();});
+
+
+// Auto-login admin untuk development (logout jika ingin ganti user)
+document.getElementById('loginUser').value='admin';
+document.getElementById('loginPass').value='admin';
+doLogin();
+</script>
+</body>
+</html>

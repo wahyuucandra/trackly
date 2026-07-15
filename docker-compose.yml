@@ -1,0 +1,20 @@
+# ============================================================
+# TRACKLY — Docker Compose
+# ============================================================
+# Database is NOT in this file — using Neon PostgreSQL (cloud)
+# Only the Next.js app runs locally
+
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped

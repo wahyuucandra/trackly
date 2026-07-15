@@ -1,0 +1,171 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// User — Pengguna sistem (Admin / AO)
+// ============================================================
+model User {
+  id           String    @id @default(uuid())
+  username     String    @unique
+  passwordHash String    @map("password_hash")
+  name         String
+  role         String    @default("AO")
+  area         String[]  @default([])
+  permissions  Json      @default("{}")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  programs        ProgramAO[]
+  taskPICs        TaskPIC[]
+  taskStatuses    TaskStatus[]
+  approvalLogs    ApprovalLog[]
+  createdPrograms Program[]     @relation("ProgramCreator")
+  createdTasks    Task[]        @relation("TaskCreator")
+  createdApprovals ApprovalLog[] @relation("ApprovalCreator")
+
+  @@map("users")
+}
+
+// ============================================================
+// MstGcm — Master data GCM (generic master: area, dll)
+// ============================================================
+model MstGcm {
+  id          String   @id @default(uuid())
+  condition   String
+  cd_value    String   @map("cd_value")
+  desc_value  String   @map("desc_value")
+  flag_active Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("mst_gcm")
+}
+
+// ============================================================
+// Program — Program yang dimonitor
+// ============================================================
+model Program {
+  id          String    @id @default(uuid())
+  name        String
+  type        String    @default("Program Development") @map("jenis")
+  notes       String?   @map("catatan")
+  createdById String    @map("created_by_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  createdBy User         @relation("ProgramCreator", fields: [createdById], references: [id])
+  jadwal    Jadwal[]
+  aos       ProgramAO[]
+  tasks     Task[]
+
+  @@map("programs")
+}
+
+// ============================================================
+// Jadwal — Schedule per area per program
+// ============================================================
+model Jadwal {
+  id         String   @id @default(uuid())
+  programId  String   @map("program_id")
+  area       String
+  startDate  String?  @map("start_date")
+  endDate    String?  @map("end_date")
+
+  program Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@map("jadwal")
+}
+
+// ============================================================
+// ProgramAO — Many-to-many: AO assigned to Program
+// ============================================================
+model ProgramAO {
+  programId String @map("program_id")
+  userId    String @map("user_id")
+
+  program Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([programId, userId])
+  @@map("program_aos")
+}
+
+// ============================================================
+// Task — Tugas dalam program
+// ============================================================
+model Task {
+  id          String   @id @default(uuid())
+  programId   String   @map("program_id")
+  name        String   @map("nama")
+  deadline    String
+  notes       String?  @map("catatan")
+  evidenceUrl String?  @map("evidence_url")
+  createdById String   @map("created_by_id")
+  updatedAt   String?  @map("updated_at")
+
+  program   Program      @relation(fields: [programId], references: [id], onDelete: Cascade)
+  createdBy User         @relation("TaskCreator", fields: [createdById], references: [id])
+  pics      TaskPIC[]
+  statuses  TaskStatus[]
+  approvals ApprovalLog[]
+
+  @@map("tasks")
+}
+
+// ============================================================
+// TaskPIC — Many-to-many: AO assigned to Task
+// ============================================================
+model TaskPIC {
+  taskId String @map("task_id")
+  userId String @map("user_id")
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, userId])
+  @@map("task_pics")
+}
+
+// ============================================================
+// TaskStatus — Status tugas per AO
+// ============================================================
+model TaskStatus {
+  id                String   @id @default(uuid())
+  taskId            String   @map("task_id")
+  userId            String   @map("user_id")
+  status            String   @default("belum")
+  notes             String?  @map("ao_notes")
+  isPendingApproval Boolean  @default(false) @map("is_pending_approval")
+  isApproved        Boolean  @default(false) @map("is_approved")
+  rejectionNote     String?  @map("rejection_note")
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId])
+  @@map("task_statuses")
+}
+
+// ============================================================
+// ApprovalLog — Riwayat approve/reject
+// ============================================================
+model ApprovalLog {
+  id          String   @id @default(uuid())
+  taskId      String   @map("task_id")
+  userId      String   @map("user_id")
+  action      String
+  note        String?
+  createdById String   @map("created_by_id")
+  createdAt   String   @default("") @map("created_at")
+
+  task      Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdBy User @relation("ApprovalCreator", fields: [createdById], references: [id])
+
+  @@map("approval_logs")
+}
