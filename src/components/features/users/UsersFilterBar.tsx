@@ -41,7 +41,6 @@ export function UsersFilterBar({
         options={allAreas}
         optionLabels={areaMap}
         selected={areas}
-        selectAllClears
         placeholder="Cari area..."
         onChange={(next) => onChange({ areas: next })}
       />
