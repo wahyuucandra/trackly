@@ -7,6 +7,7 @@ import { useGcmList, useAreaMap } from "@/hooks/useGcm";
 import { Button } from "@/components/ui/button";
 import { MultiSelect } from "@/components/ui/multiselect";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ExportSkeleton } from "@/components/features/export/ExportSkeleton";
 import { Download, FileSpreadsheet, RotateCcw } from "lucide-react";
 
 const STATUS_OPTIONS = ["belum", "berjalan", "selesai"];
@@ -32,7 +33,7 @@ export default function ExportPage() {
   const allAreas = useMemo(() => gcm.filter((g) => g.flag_active).map((g) => g.cd_value), [gcm]);
 
   const isLoading = usersLoading || progsLoading || gcmLoading;
-  if (isLoading) return null;
+  if (isLoading) return <ExportSkeleton />;
 
   const hasFilters = areas.length > 0 || aos.length > 0 || programIds.length > 0 || statuses.length > 0;
 

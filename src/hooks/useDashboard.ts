@@ -169,8 +169,8 @@ export function usePDODashboard(filters: DashboardFilters = getDefaultFilters())
 }
 
 export function useAODashboard() {
-  const { programs: allPrograms } = useProgramsQuery();
-  const { tasks: allTasks } = useTasksQuery();
+  const { programs: allPrograms, isLoading: progLoading } = useProgramsQuery();
+  const { tasks: allTasks, isLoading: taskLoading } = useTasksQuery();
 
-  return { programs: allPrograms, tasks: allTasks };
+  return { programs: allPrograms, tasks: allTasks, isLoading: progLoading || taskLoading };
 }

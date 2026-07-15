@@ -1,3 +1,4 @@
+import { DashboardSkeleton } from "./DashboardSkeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Pagination } from "@/components/ui/pagination";
 import { DashboardFilters, getDefaultFilters, usePDODashboard } from "@/hooks/useDashboard";
@@ -36,7 +37,7 @@ export function PDODashboardView() {
     setPage(1);
   };
 
-  if (isLoading) return null;
+  if (isLoading) return <DashboardSkeleton />;
 
   const totalAO = stats.aoSummary.length;
   const pagedAO = stats.aoSummary.slice((page - 1) * limit, page * limit);

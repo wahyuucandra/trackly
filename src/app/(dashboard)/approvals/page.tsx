@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState, VariantBadge } from "@/components/common";
 import { ApprovalHistory } from "@/components/features/approvals/ApprovalHistory";
 import { DeleteConfirmModal } from "@/components/features/users/DeleteConfirmModal";
+import { ApprovalsSkeleton } from "@/components/features/approvals/ApprovalsSkeleton";
 import { getAOColor } from "@/utils/formatters";
 import { FileCheck, Search, Check, X, ExternalLink, Trash2, Folder, Clock, FileText } from "lucide-react";
 
@@ -113,7 +114,7 @@ export default function ApprovalsPage() {
     setDeletePending(null);
   };
 
-  if (isLoading) return null;
+  if (isLoading) return <ApprovalsSkeleton />;
 
   return (
     <div className="space-y-8">

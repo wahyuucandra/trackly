@@ -11,6 +11,7 @@ import { DeleteConfirmModal } from "@/components/features/users/DeleteConfirmMod
 import { UserFormModal } from "@/components/features/users/UserFormModal";
 import { Pagination } from "@/components/ui/pagination";
 import { VariantBadge } from "@/components/common";
+import { UsersSkeleton } from "@/components/features/users/UsersSkeleton";
 import { UserPlus, Edit, Trash2 } from "lucide-react";
 import type { User as UserType } from "@/types";
 
@@ -123,7 +124,7 @@ function UsersPageContent({ canManageUsers }: { canManageUsers: boolean }) {
     setModalOpen(true);
   };
 
-  if (isLoading || gcmLoading) return null;
+  if (isLoading || gcmLoading) return <UsersSkeleton />;
 
   return (
     <div>

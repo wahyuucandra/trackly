@@ -6,6 +6,7 @@ import { useUserList } from "@/hooks/useUsers";
 import { useGcmList, useAreaMap } from "@/hooks/useGcm";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/common";
+import { ProgramsSkeleton } from "@/components/features/programs/ProgramsSkeleton";
 import { ProgramCard } from "@/components/features/programs/ProgramCard";
 import { ProgramFilterBar } from "@/components/features/programs/ProgramFilterBar";
 import { ProgramFormModal } from "@/components/features/programs/ProgramFormModal";
@@ -16,10 +17,12 @@ import { Plus } from "lucide-react";
 import type { Program, Task } from "@/types";
 
 export default function ProgramsPage() {
-  const { programs: allPrograms } = useProgramList();
-  const { users: allUsers } = useUserList();
-  const { gcm } = useGcmList();
+  const { programs: allPrograms, isLoading: progLoading } = useProgramList();
+  const { users: allUsers, isLoading: userLoading } = useUserList();
+  const { gcm, isLoading: gcmLoading } = useGcmList();
   const areaMap = useAreaMap();
+
+  const isLoading = progLoading || userLoading || gcmLoading;
 
   const allAreas = gcm.filter((g) => g.flag_active).map((g) => g.cd_value);
 
@@ -103,6 +106,8 @@ export default function ProgramsPage() {
     else deleteTask.mutate(deleteTarget.id);
     setDeleteTarget(null);
   };
+
+  if (isLoading) return <ProgramsSkeleton />;
 
   return (
     <div className="space-y-6">

@@ -16,7 +16,8 @@ export default function DashboardPage() {
     }
   }, [status, router]);
 
-  if (status === "loading") return null;
+
   if (!session?.user) return null;
+
   return session.user.role === "Admin" ? <PDODashboardView /> : <AODashboardView />;
 }

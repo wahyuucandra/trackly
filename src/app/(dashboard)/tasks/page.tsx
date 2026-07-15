@@ -9,12 +9,13 @@ import { useAreaMap } from "@/hooks/useGcm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MultiSelect } from "@/components/ui/multiselect";
-import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/common";
+import { TasksSkeleton } from "@/components/features/tasks/TasksSkeleton";
 import { TaskGroup } from "@/components/features/tasks/TaskGroup";
 import { TaskUpdateModal } from "@/components/features/tasks/TaskUpdateModal";
 import { Search } from "lucide-react";
 import type { Task } from "@/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const STATUS_OPTIONS = [
   { value: "notupdated", label: "Belum Update" },
@@ -67,7 +68,11 @@ export default function TasksPage() {
     }
   }, [status, router]);
 
-  if (status === "loading" || !user) return null;
+  if (status === "loading") {
+    return <TasksSkeleton />;
+  }
+
+  if (!user) return null;
 
   // Filter tasks
   const filteredTasks = useMemo(() => {

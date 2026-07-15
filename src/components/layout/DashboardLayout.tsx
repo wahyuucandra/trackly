@@ -44,7 +44,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  if (status === "loading") {
+  if (status === "loading" || status === "unauthenticated") {
     return (
       <div className="relative flex flex-col items-center justify-center min-h-screen bg-[#224394] text-white overflow-hidden">
         {/* Decorative background circles */}
@@ -93,10 +93,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         </div>
       </div>
     );
-  }
-
-  if (status === "unauthenticated") {
-    return null;
   }
 
   return (

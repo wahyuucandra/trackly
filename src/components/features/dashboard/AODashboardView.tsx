@@ -6,6 +6,7 @@ import { BarChart3, CheckCircle, TrendingUp, Clock, Folder, ChevronRight, Target
 import { useSession } from "next-auth/react";
 import { StatCard } from "./StatCard";
 import { Progress } from "@/components/ui/progress";
+import { DashboardSkeleton } from "./DashboardSkeleton";
 import { formatDate } from "@/utils/formatters";
 import { useRouter } from "next/navigation";
 
@@ -13,8 +14,10 @@ export function AODashboardView() {
   const { data: session } = useSession();
   const router = useRouter();
   const user = session?.user;
-  const { programs, tasks } = useAODashboard();
+  const { programs, tasks, isLoading } = useAODashboard();
   const areaMap = useAreaMap();
+
+  if (isLoading) return <DashboardSkeleton />;
   const myTasks = tasks.filter((t) => {
     const prog = programs.find((p) => p.id === t.programId);
     if (!prog) return false;
