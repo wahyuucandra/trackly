@@ -67,6 +67,7 @@ export async function POST(req: NextRequest) {
         orderBy: { createdAt: "desc" },
       },
       program: { select: { id: true, name: true, type: true } },
+      createdBy: { select: { id: true, name: true } },
     },
   });
 

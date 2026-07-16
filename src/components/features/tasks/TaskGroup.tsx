@@ -5,7 +5,8 @@ import { TaskCard } from "@/components/features/tasks/TaskCard";
 import { StatusBadge, VariantBadge } from "@/components/common";
 import { Progress } from "@/components/ui/progress";
 import { Folder, MapPin, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
-import type { Task } from "@/types";
+import { formatJadwal } from "@/utils/formatters";
+import type { Task, Jadwal } from "@/types";
 
 interface TaskGroupProps {
   programId: string;
@@ -14,9 +15,11 @@ interface TaskGroupProps {
   programType?: string;
   programNotes?: string | null;
   programAreas?: string[];
+  programJadwal?: Jadwal[];
   programProgress?: number;
   userArea: string[];
   userId: string;
+  forceExpand?: boolean;
   defaultExpanded?: boolean;
   onUpdateTask: (task: Task) => void;
 }
@@ -28,13 +31,16 @@ export function TaskGroup({
   programType,
   programNotes,
   programAreas,
+  programJadwal = [],
   programProgress,
   userArea,
   userId,
+  forceExpand = false,
   defaultExpanded = false,
   onUpdateTask,
 }: TaskGroupProps) {
-  const [expanded, setExpanded] = useState(defaultExpanded);
+  const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
+  const expanded = forceExpand || internalExpanded;
 
   return (
     <div className="bg-card rounded-[20px] border border-border p-5 md:p-6 shadow-[0_4px_16px_rgba(15,23,42,.04)]">
@@ -54,7 +60,12 @@ export function TaskGroup({
           </VariantBadge>
         )}
         {programAreas && programAreas.length > 0 && (
-          <span className="flex items-center gap-1.5">
+          <span
+            className="flex items-center gap-1.5 cursor-help"
+            title={programJadwal.length > 0
+              ? programJadwal.map((j) => `${j.area}${j.startDate ? `: ${j.startDate}${j.endDate ? ` → ${j.endDate}` : ""}` : ""}`).join("\n")
+              : programAreas.join(", ")}
+          >
             <MapPin className="w-3.5 h-3.5" />
             {programAreas.slice(0, 2).join(", ")}
             {programAreas.length > 2 && (
@@ -90,7 +101,7 @@ export function TaskGroup({
           <div className="flex items-center justify-between mb-2.5">
             <p className="text-[13px] font-semibold text-muted-foreground">Daftar Tugas ({tasks.length})</p>
             <button
-              onClick={() => setExpanded(!expanded)}
+              onClick={() => forceExpand ? null : setInternalExpanded(!internalExpanded)}
               className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
             >
               {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}

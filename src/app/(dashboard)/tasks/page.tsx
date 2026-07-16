@@ -13,7 +13,9 @@ import { EmptyState } from "@/components/common";
 import { TasksSkeleton } from "@/components/features/tasks/TasksSkeleton";
 import { TaskGroup } from "@/components/features/tasks/TaskGroup";
 import { TaskUpdateModal } from "@/components/features/tasks/TaskUpdateModal";
-import { Search } from "lucide-react";
+import { Search, Filter, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import type { Task } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -105,14 +107,18 @@ export default function TasksPage() {
     return groups;
   }, [filteredTasks]);
 
-  // Filter programs by search
+  // Filter programs by search (match program name OR task name)
   const programEntries = useMemo(() => {
     const entries = Object.entries(grouped);
     if (!searchProgram) return entries;
     const q = searchProgram.toLowerCase();
-    return entries.filter(([pid]) => {
+    return entries.filter(([pid, progTasks]) => {
       const prog = allPrograms.find((p) => p.id === pid);
-      return prog?.name.toLowerCase().includes(q);
+      if (!prog) return false;
+      return (
+        prog.name.toLowerCase().includes(q) ||
+        progTasks.some((t) => t.name.toLowerCase().includes(q))
+      );
     });
   }, [grouped, searchProgram, allPrograms]);
 
@@ -120,6 +126,14 @@ export default function TasksPage() {
   const hasMore = visibleCount < programEntries.length;
 
   const greeting = new Date().getHours() < 12 ? "Selamat Pagi" : new Date().getHours() < 18 ? "Selamat Siang" : "Selamat Malam";
+
+  const isFiltering = statusFilters.length > 0 || !!searchProgram;
+
+  // Clear all filters
+  const clearFilters = () => {
+    setStatusFilters([]);
+    setSearchProgram("");
+  };
 
   const handleSubmitUpdate = (data: { status: string; aoNote: string; evidenceUrl: string; submitForApproval: boolean }) => {
     if (!updateTaskItem) return;
@@ -138,25 +152,96 @@ export default function TasksPage() {
         </div>
       </div>
 
-      {/* Filters — clean bar, same width as 1 card */}
-      <div className="bg-card rounded-2xl border border-border p-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-[calc(50%-0.5rem)]">
-        <MultiSelect
-          label="Status"
-          options={STATUS_OPTIONS.map((o) => o.value)}
-          optionLabels={new Map(STATUS_OPTIONS.map((o) => [o.value, o.label]))}
-          selected={statusFilters}
-          onChange={(v) => { setStatusFilters(v); setVisibleCount(ITEMS_PER_PAGE); }}
-          className="flex-1"
-        />
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Cari program..."
-            value={searchProgram}
-            onChange={(e) => { setSearchProgram(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
-            className="pl-9 h-9 text-sm"
-          />
+      {/* Filters */}
+      <div className="bg-gradient-to-br from-card to-primary/5 rounded-2xl border border-border/60 p-5 shadow-sm">
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-2">
+            <Filter className="w-5 h-5 text-primary" />
+            <span className="font-semibold text-sm">Filter Tugas</span>
+          </div>
+          {isFiltering && (
+            <button
+              onClick={clearFilters}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+            >
+              <X className="w-3 h-3" /> Clear
+            </button>
+          )}
         </div>
+
+        <div className="flex flex-col sm:flex-row items-start gap-4">
+          {/* Status Filter */}
+          <div className="flex-1 w-full">
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+              Status
+            </label>
+            <MultiSelect
+              label="Pilih status..."
+              options={STATUS_OPTIONS.map((o) => o.value)}
+              optionLabels={new Map(STATUS_OPTIONS.map((o) => [o.value, o.label]))}
+              selected={statusFilters}
+              onChange={(v) => { setStatusFilters(v); setVisibleCount(ITEMS_PER_PAGE); }}
+              className="flex-1"
+            />
+          </div>
+
+          {/* Search */}
+          <div className="flex-1 w-full">
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+              Cari Program atau Tugas
+            </label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Ketik nama program atau tugas..."
+                value={searchProgram}
+                onChange={(e) => { setSearchProgram(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
+                className="pl-9 h-10 text-sm"
+              />
+              {searchProgram && (
+                <button
+                  onClick={() => setSearchProgram("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Active filter chips */}
+        {isFiltering && (
+          <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border/50">
+            {statusFilters.map((f) => {
+              const opt = STATUS_OPTIONS.find((o) => o.value === f);
+              return (
+                <Badge
+                  key={f}
+                  variant="secondary"
+                  className="bg-primary/10 text-primary font-medium px-3 py-1 text-xs cursor-pointer hover:bg-primary/20 transition-colors"
+                  onClick={() => {
+                    setStatusFilters((prev) => prev.filter((x) => x !== f));
+                    setVisibleCount(ITEMS_PER_PAGE);
+                  }}
+                >
+                  {opt?.label || f}
+                  <X className="w-3 h-3 ml-1" />
+                </Badge>
+              );
+            })}
+            {searchProgram && (
+              <Badge
+                variant="secondary"
+                className="bg-primary/10 text-primary font-medium px-3 py-1 text-xs cursor-pointer hover:bg-primary/20 transition-colors"
+                onClick={() => setSearchProgram("")}
+              >
+                &ldquo;{searchProgram}&rdquo;
+                <X className="w-3 h-3 ml-1" />
+              </Badge>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Program cards — 2 columns */}
@@ -176,7 +261,9 @@ export default function TasksPage() {
                   programType={prog?.type}
                   programNotes={prog?.notes}
                   programAreas={areas}
+                  programJadwal={jadwal}
                   programProgress={prog ? getProgramProgress(prog) : undefined}
+                  forceExpand={isFiltering}
                   defaultExpanded={expandProgramId === pid}
                   userArea={area}
                   userId={userId}

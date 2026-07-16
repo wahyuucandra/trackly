@@ -2,8 +2,10 @@ import { EmptyState } from "@/components/common";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAODashboard } from "@/hooks/useDashboard";
 import { useAreaMap } from "@/services/query";
+import { CalendarView } from "@/components/features/tasks/CalendarView";
 import { BarChart3, CheckCircle, TrendingUp, Clock, Folder, ChevronRight, Target } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { useMemo } from "react";
 import { StatCard } from "./StatCard";
 import { Progress } from "@/components/ui/progress";
 import { DashboardSkeleton } from "./DashboardSkeleton";
@@ -35,6 +37,31 @@ export function AODashboardView() {
     router.push(`/tasks?expand=${programId}`);
   }
 
+  // Calendar data
+  const calendarTasks = useMemo(
+    () =>
+      myTasks.map((t) => {
+        const prog = programs.find((p) => p.id === t.programId);
+        const st = (t.statuses || []).find((s) => s.userId === user?.id);
+        const isApproved = st?.isApproved ?? false;
+        const isPending = (st?.isPendingApproval && !isApproved) ?? false;
+        const status: "belum" | "berjalan" | "menunggu" | "selesai" = isApproved
+          ? "selesai"
+          : isPending
+            ? "menunggu"
+            : st?.status === "berjalan"
+              ? "berjalan"
+              : "belum";
+        return {
+          deadline: t.deadline,
+          name: t.name,
+          programName: prog?.name || "",
+          status,
+        };
+      }),
+    [myTasks, programs, user?.id],
+  );
+
   return (
     <div className="space-y-8">
       <div>
@@ -47,6 +74,10 @@ export function AODashboardView() {
         <StatCard icon={TrendingUp} label="Berjalan" value={berjalan} accent="slate" />
         <StatCard icon={Clock} label="Menunggu Verifikasi" value={pending} accent="amber" />
       </div>
+
+      {/* Calendar */}
+      <CalendarView tasks={calendarTasks} />
+
       <div>
         <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Program di Area Saya</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

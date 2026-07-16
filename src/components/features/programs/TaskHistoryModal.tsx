@@ -54,15 +54,21 @@ export function TaskHistoryModal({ open, onOpenChange, task, userMap }: TaskHist
   (task.statusHistory || []).forEach((h) => {
     // Skip approval/rejection statuses — handled by approval events above
     if (h.status === "disetujui" || h.status === "ditolak") return;
+    const isDibuat = h.status === "dibuat";
+    const adminName = task.createdBy?.name || "Admin";
     const aoName = h.user?.name || userMap.get(h.userId) || h.userId;
     events.push({
       type: "submission",
       date: h.createdAt || "",
-      label: `${aoName} — ${STATUS_LABELS[h.status] || h.status}`,
-      detail: h.notes || null,
+      label: isDibuat
+        ? `${adminName} — ${STATUS_LABELS[h.status] || h.status}`
+        : `${aoName} — ${STATUS_LABELS[h.status] || h.status}`,
+      detail: isDibuat
+        ? `PIC: ${aoName}`
+        : (h.notes || null),
       evidenceUrl: h.evidenceUrl || null,
-      icon: <Send className="w-4 h-4" />,
-      color: "bg-blue-100 text-blue-600",
+      icon: isDibuat ? <StickyNote className="w-4 h-4" /> : <Send className="w-4 h-4" />,
+      color: isDibuat ? "bg-primary text-primary-foreground" : "bg-blue-100 text-blue-600",
     });
   });
 

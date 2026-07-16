@@ -16,7 +16,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  dibuat: "Tugas dibuat",
+  dibuat: "Tugas dibuat oleh Admin",
   belum: "Belum dimulai",
   berjalan: "Sedang berjalan",
   selesai: "Selesai",

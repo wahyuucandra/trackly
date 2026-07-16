@@ -27,9 +27,10 @@ export function StatusBadge({ status, isApproved }: { status: string; isApproved
 export function DeadlineBadge({ deadline }: { deadline: string }) {
   if (!deadline) return null;
   const diff = Math.ceil((new Date(deadline).getTime() - Date.now()) / 86400000);
-  if (diff < 0) return <Badge variant="secondary" className="bg-red-50 text-red-700 font-semibold px-3 py-1 text-sm rounded-full"><AlertTriangle className="w-3 h-3 mr-1" /> Lewat {Math.abs(diff)}h</Badge>;
-  if (diff <= 7) return <Badge variant="secondary" className="bg-amber-50 text-amber-700 font-semibold px-3 py-1 text-sm rounded-full"><Clock className="w-3 h-3 mr-1" /> {diff} hari</Badge>;
-  return <span className="text-sm text-muted-foreground">{new Date(deadline).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</span>;
+  const dateStr = new Date(deadline).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+  if (diff < 0) return <Badge variant="secondary" className="bg-red-50 text-red-700 font-semibold px-3 py-1 text-sm rounded-full"><AlertTriangle className="w-3 h-3 mr-1" /> {dateStr} · Lewat {Math.abs(diff)}h</Badge>;
+  if (diff <= 7) return <Badge variant="secondary" className="bg-amber-50 text-amber-700 font-semibold px-3 py-1 text-sm rounded-full"><Clock className="w-3 h-3 mr-1" /> {dateStr} · {diff} hari</Badge>;
+  return <Badge variant="secondary" className="bg-slate-100 text-slate-600 font-semibold px-3 py-1 text-sm rounded-full"><Clock className="w-3 h-3 mr-1" /> {dateStr}</Badge>;
 }
 
 export function EmptyState({ icon, title, description }: { icon?: React.ReactNode; title: string; description?: string }) {
