@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback, useState } from "react";
+import { useMemo, useCallback, useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -77,17 +77,6 @@ export function ProgramFormModal({
   // ─── AO disable: butuh isi tanggal dulu ────────────────────
   const hasDates = jadwal.some((j) => j.area && j.startDate && j.endDate);
 
-  // ─── Area options filtered by AO ───────────────────────────
-  const areaOptionsByAO = useMemo(() => {
-    if (aoIds.length === 0) return allAreas;
-    const aoAreaSet = new Set<string>();
-    aoUsers
-      .filter((u) => aoIds.includes(u.id))
-      .forEach((u) => (u.area || []).forEach((a) => aoAreaSet.add(a)));
-    if (aoAreaSet.size === 0) return allAreas;
-    return allAreas.filter((a) => aoAreaSet.has(a));
-  }, [allAreas, aoIds, aoUsers]);
-
   // ─── Group jadwal by (startDate, endDate) ──────────────────
   const dateGroups = useMemo(() => {
     const seen = new Set<string>();
@@ -113,10 +102,23 @@ export function ProgramFormModal({
     ]);
   }, [setJadwal]);
 
-  const canAddBlock = dateGroups.length < 3;
+  const canAddBlock = jadwal.length < 3;
 
   // ─── Toggle Sama / Beda ──────────────────────────────────
   const [isSameDate, setIsSameDate] = useState(false);
+
+  // Deteksi mode Sama / Beda saat edit program
+  useEffect(() => {
+    if (!editProgram?.jadwal?.length) {
+      setIsSameDate(false);
+      return;
+    }
+    const j = editProgram.jadwal;
+    const dates = j.map((x) => `${x.startDate}||${x.endDate}`);
+    const unique = new Set(dates);
+    // Sama mode: >1 area dengan tanggal identik
+    setIsSameDate(unique.size === 1 && j.length > 1);
+  }, [editProgram]);
 
   // ─── Validation ────────────────────────────────────────────
   const hasAreaFilled = jadwal.some((j) => j.area);
@@ -132,9 +134,9 @@ export function ProgramFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="sm:min-w-[650px] sm:max-w-[650px] p-0 gap-0 max-h-[90vh] flex flex-col">
+      <DialogContent showCloseButton={false} className="w-[calc(100vw-2rem)] sm:min-w-[650px] sm:max-w-[650px] p-0 gap-0 max-h-[90vh] flex flex-col">
         {/* Header — close button di dalam */}
-        <div className="px-6 py-4 border-b border-border bg-secondary/30 flex items-center justify-between shrink-0">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-border bg-secondary/30 flex items-center justify-between shrink-0">
           <DialogTitle className="text-lg flex items-center gap-2.5">
             <div className="p-2 rounded-lg bg-primary/10">
               <Folder className="w-5 h-5 text-primary" />
@@ -152,7 +154,7 @@ export function ProgramFormModal({
         </div>
 
         {/* Content (scrollable) */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6 space-y-5 sm:space-y-6">
           {/* Nama — mandatory */}
           <div>
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -193,11 +195,11 @@ export function ProgramFormModal({
 
           {/* ─── Jadwal — Mode Toggle ─────────────────────────── */}
           <div>
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Jadwal per Area <span className="text-red-500">*</span>
               </label>
-              <div className="flex border border-border rounded-md overflow-hidden">
+              <div className="flex border border-border rounded-md overflow-hidden self-start">
                 <button
                   type="button"
                   onClick={() => {
@@ -216,7 +218,7 @@ export function ProgramFormModal({
                     setIsSameDate(true);
                   }}
                   className={cn(
-                    "px-3 py-1 text-xs font-medium transition-colors",
+                    "px-4 py-1.5 text-sm font-medium transition-colors",
                     isSameDate
                       ? "bg-primary text-primary-foreground"
                       : "bg-transparent text-muted-foreground hover:bg-secondary",
@@ -248,7 +250,7 @@ export function ProgramFormModal({
                     setIsSameDate(false);
                   }}
                   className={cn(
-                    "px-3 py-1 text-xs font-medium transition-colors",
+                    "px-4 py-1.5 text-sm font-medium transition-colors",
                     !isSameDate
                       ? "bg-primary text-primary-foreground"
                       : "bg-transparent text-muted-foreground hover:bg-secondary",
@@ -261,10 +263,10 @@ export function ProgramFormModal({
 
             {/* ─── Mode "Sama" ─────────────────────────────────── */}
             {isSameDate && (
-              <div className="space-y-3 border border-border rounded-lg p-4 bg-secondary/5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-3 sm:space-y-4 border border-border rounded-lg p-4 sm:p-5 bg-secondary/5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                       Mulai <span className="text-red-500">*</span>
                     </label>
                     <Input
@@ -274,12 +276,12 @@ export function ProgramFormModal({
                         const v = e.target.value;
                         setJadwal((prev) => prev.map((j) => ({ ...j, startDate: v })));
                       }}
-                      className="mt-1 h-9 text-sm"
+                      className="mt-1.5 h-10 text-sm"
                       required
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                       Selesai <span className="text-red-500">*</span>
                     </label>
                     <Input
@@ -289,18 +291,18 @@ export function ProgramFormModal({
                         const v = e.target.value;
                         setJadwal((prev) => prev.map((j) => ({ ...j, endDate: v })));
                       }}
-                      className="mt-1 h-9 text-sm"
+                      className="mt-1.5 h-10 text-sm"
                       required
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                     Area <span className="text-red-500">*</span>
                   </label>
                   <MultiSelect
                     label={dateGroups[0]?.areas.length === 0 ? "Pilih Area" : dateGroups[0]?.areas.length === 1 ? (areaMap.get(dateGroups[0].areas[0]) || dateGroups[0].areas[0]) : `${dateGroups[0]?.areas.length || 0} area`}
-                    options={areaOptionsByAO}
+                    options={allAreas}
                     optionLabels={areaMap}
                     selected={dateGroups[0]?.areas || []}
                     onChange={(areas) => {
@@ -344,107 +346,82 @@ export function ProgramFormModal({
               </div>
             )}
 
-            {/* ─── Mode "Beda per Area" — 1 baris ────────────── */}
+            {/* ─── Mode "Beda per Area" — 1 baris per entry ────── */}
             {!isSameDate && (
-              <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
-                {dateGroups.map((group, gi) => {
+              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+                {jadwal.map((j, ji) => {
                   // Area yang sudah dipakai di baris lain
                   const usedInOtherRows = new Set<string>();
-                  dateGroups.forEach((g, i) => {
-                    if (i !== gi && g.areas[0]) usedInOtherRows.add(g.areas[0]);
+                  jadwal.forEach((x, i) => {
+                    if (i !== ji && x.area) usedInOtherRows.add(x.area);
                   });
-                  const availableAreas = areaOptionsByAO.filter(
-                    (a) => !usedInOtherRows.has(a) || a === group.areas[0],
+                  const availableAreas = allAreas.filter(
+                    (a) => !usedInOtherRows.has(a) || a === j.area,
                   );
 
                   return (
-                  <div key={group.key} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-end border border-border rounded-lg p-3 bg-secondary/10">
+                  <div key={`beda-${ji}-${j.startDate}-${j.endDate}`} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_auto] gap-2 sm:gap-3 items-start border border-border rounded-lg p-3 sm:p-4 bg-secondary/10">
                     <div>
-                      <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                         Area <span className="text-red-500">*</span>
                       </label>
-                      <Select value={group.areas[0] || ""} onValueChange={(area) => {
-                        if (!area) return;
-                        setJadwal((prev) => {
-                          const others = prev.filter(
-                            (x) => !(x.startDate === group.startDate && x.endDate === group.endDate),
+                      <SelectInline
+                        value={j.area || ""}
+                        onChange={(area) => {
+                          if (!area) return;
+                          setJadwal((prev) =>
+                            prev.map((x, i) => (i === ji ? { ...x, area } : x)),
                           );
-                          return [...others, { area, startDate: group.startDate, endDate: group.endDate }];
-                        });
-                      }}>
-                        <SelectTrigger className="mt-1 h-9 text-sm">
-                          {group.areas[0] ? (
-                            <span>{areaMap.get(group.areas[0]) || group.areas[0]}</span>
-                          ) : (
-                            <span className="text-muted-foreground">Pilih area</span>
-                          )}
-                        </SelectTrigger>
-                        <SelectContent className="max-h-[200px]">
-                          {availableAreas.map((a) => (
-                            <SelectItem key={a} value={a}>{areaMap.get(a) || a}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        }}
+                        options={availableAreas}
+                        optionLabels={areaMap}
+                        placeholder="Pilih area..."
+                        searchPlaceholder="Cari area..."
+                        searchable
+                        className="mt-1"
+                      />
                     </div>
                     <div>
-                      <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                         Mulai <span className="text-red-500">*</span>
                       </label>
                       <Input
                         type="date"
-                        value={group.startDate.startsWith("__new_") ? "" : group.startDate}
+                        value={j.startDate.startsWith("__new_") ? "" : j.startDate}
                         onChange={(e) => {
-                          const oldStart = group.startDate;
-                          const oldEnd = group.endDate;
-                          const newStart = e.target.value;
                           setJadwal((prev) =>
-                            prev.map((x) =>
-                              x.startDate === oldStart && x.endDate === oldEnd
-                                ? { ...x, startDate: newStart }
-                                : x,
-                            ),
+                            prev.map((x, i) => (i === ji ? { ...x, startDate: e.target.value } : x)),
                           );
                         }}
-                        className="mt-1 h-9 text-sm"
+                        className="mt-1.5 h-10 text-sm"
                         required
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                         Selesai <span className="text-red-500">*</span>
                       </label>
                       <Input
                         type="date"
-                        value={group.endDate.startsWith("__new_") ? "" : group.endDate}
+                        value={j.endDate.startsWith("__new_") ? "" : j.endDate}
                         onChange={(e) => {
-                          const oldStart = group.startDate;
-                          const oldEnd = group.endDate;
-                          const newEnd = e.target.value;
                           setJadwal((prev) =>
-                            prev.map((x) =>
-                              x.startDate === oldStart && x.endDate === oldEnd
-                                ? { ...x, endDate: newEnd }
-                                : x,
-                            ),
+                            prev.map((x, i) => (i === ji ? { ...x, endDate: e.target.value } : x)),
                           );
                         }}
-                        className="mt-1 h-9 text-sm"
+                        className="mt-1.5 h-10 text-sm"
                         required
                       />
                     </div>
-                    <div className="flex items-end">
+                    <div className="flex items-end self-end">
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
                         onClick={() => {
-                          setJadwal((prev) =>
-                            prev.filter(
-                              (x) => !(x.startDate === group.startDate && x.endDate === group.endDate),
-                            ),
-                          );
+                          setJadwal((prev) => prev.filter((_, i) => i !== ji));
                         }}
-                        className="h-9 w-9 text-muted-foreground hover:text-red-500"
+                        className="h-10 w-10 text-muted-foreground hover:text-red-500"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -452,12 +429,12 @@ export function ProgramFormModal({
                   </div>
                   );
                 })}
-                {canAddBlock && (
-                  <Button type="button" variant="ghost" size="sm" onClick={addBlock} className="h-7 text-xs gap-1">
-                    <Plus className="w-3 h-3" /> Tambah
+                {jadwal.length < 3 && (
+                  <Button type="button" variant="ghost" size="sm" onClick={addBlock} className="h-8 text-sm gap-1.5">
+                    <Plus className="w-3.5 h-3.5" /> Tambah Baris
                   </Button>
                 )}
-                {!canAddBlock && (
+                {jadwal.length >= 3 && (
                   <p className="text-[11px] text-muted-foreground">Maksimal 3 baris.</p>
                 )}
               </div>
@@ -533,7 +510,7 @@ export function ProgramFormModal({
         
 
         {/* Footer (sticky) */}
-        <div className="px-6 py-4 border-t border-border bg-secondary/20 flex items-center justify-end gap-3 shrink-0">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-border bg-secondary/20 flex items-center justify-end gap-2 sm:gap-3 shrink-0">
           <Button variant="outline" onClick={() => onOpenChange(false)} className="px-5">
             Batal
           </Button>

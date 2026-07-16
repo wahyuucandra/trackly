@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   const data = await prisma.mstGcm.findMany({
+    where: { flag_active: true },
     select: {
       id: true,
       condition: true,
