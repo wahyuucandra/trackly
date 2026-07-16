@@ -33,7 +33,7 @@ export default function ProgramsPage() {
   } = useProgramFilters(allPrograms, allAreas);
 
   const { createProgram, updateProgram, deleteProgram, createTask, updateTask, deleteTask } = useProgramMutations();
-  const { formData, setFormData, jadwal, aoIds, setAoIds, resetForm, fillForm, addJadwal, removeJadwal, updateJadwal, buildPayload } = useProgramForm();
+  const { formData, setFormData, jadwal, setJadwal, aoIds, setAoIds, resetForm, fillForm, addJadwal, removeJadwal, updateJadwal, buildPayload } = useProgramForm();
 
   const [programModalOpen, setProgramModalOpen] = useState(false);
   const [editProgram, setEditProgram] = useState<Program | null>(null);
@@ -172,9 +172,7 @@ export default function ProgramsPage() {
         formData={formData}
         setFormData={setFormData}
         jadwal={jadwal}
-        updateJadwal={updateJadwal}
-        addJadwal={addJadwal}
-        removeJadwal={removeJadwal}
+        setJadwal={setJadwal}
         aoIds={aoIds}
         setAoIds={setAoIds}
         allAreas={allAreas}

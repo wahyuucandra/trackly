@@ -80,11 +80,14 @@ export function useProgramForm() {
 
   const fillForm = (prog: Program) => {
     setFormData({ name: prog.name, type: prog.type, notes: prog.notes || "" });
-    setJadwal(
-      (prog.jadwal || []).length > 0
-        ? prog.jadwal.map((j) => ({ area: j.area, startDate: j.startDate?.split("T")[0] || "", endDate: j.endDate?.split("T")[0] || "" }))
-        : [{ area: "", startDate: "", endDate: "" }],
-    );
+    const jadwalList = (prog.jadwal || []).length > 0
+      ? prog.jadwal.map((j) => ({
+          area: j.area,
+          startDate: j.startDate?.split("T")[0] || "",
+          endDate: j.endDate?.split("T")[0] || "",
+        }))
+      : [{ area: "", startDate: "", endDate: "" }];
+    setJadwal(jadwalList);
     setAoIds((prog.aos || []).map((a) => a.userId));
   };
 
@@ -101,5 +104,12 @@ export function useProgramForm() {
     aoIds: aoIds.length > 0 ? aoIds : undefined,
   });
 
-  return { formData, setFormData, jadwal, aoIds, setAoIds, resetForm, fillForm, addJadwal, removeJadwal, updateJadwal, buildPayload };
+  return {
+    formData, setFormData,
+    jadwal, setJadwal,
+    aoIds, setAoIds,
+    resetForm, fillForm,
+    addJadwal, removeJadwal, updateJadwal,
+    buildPayload,
+  };
 }

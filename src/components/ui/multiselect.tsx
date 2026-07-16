@@ -14,6 +14,8 @@ interface MultiSelectProps {
     onChange: (selected: string[]) => void;
     placeholder?: string;
     className?: string;
+    /** Jika true, opsi selalu tampil di bawah (non-absolute, dalam flow dokumen). */
+    inline?: boolean;
 }
 
 export function MultiSelect({
@@ -24,6 +26,7 @@ export function MultiSelect({
     onChange,
     placeholder = "Cari...",
     className,
+    inline = false,
 }: MultiSelectProps) {
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState("");
@@ -66,6 +69,60 @@ export function MultiSelect({
         onChange(selected.includes(val) ? selected.filter((x) => x !== val) : [...selected, val]);
     };
 
+    const renderOptions = () => (
+        <div className="border border-border rounded-lg p-1.5 bg-popover">
+            <div className="relative mb-1.5">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <Input
+                    ref={searchInputRef}
+                    placeholder={placeholder}
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-7 h-8 text-sm"
+                />
+            </div>
+            <label className="w-full flex items-center px-2.5 py-1.5 rounded-md text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors cursor-pointer">
+                <input
+                    type="checkbox"
+                    checked={allSelected}
+                    ref={(el) => { if (el) el.indeterminate = someSelected; }}
+                    onChange={handleSelectAll}
+                    className="rounded accent-primary mr-2"
+                />
+                {allSelected ? "Unselect All" : "Select All"}
+            </label>
+            <div className="max-h-44 overflow-y-auto mt-1">
+                {filtered.map((opt) => (
+                    <label key={opt} className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm hover:bg-secondary cursor-pointer">
+                        <input type="checkbox" checked={selected.includes(opt)} onChange={() => toggle(opt)} className="rounded accent-primary" />
+                        {getLabel(opt)}
+                    </label>
+                ))}
+                {filtered.length === 0 && (
+                    <p className="text-xs text-muted-foreground px-2 py-3 text-center">Tidak ada</p>
+                )}
+            </div>
+        </div>
+    );
+
+    if (inline) {
+        return (
+            <div ref={ref} className={`space-y-1.5 ${className || ""}`}>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setOpen(!open)}
+                    className="h-10 text-sm gap-1.5 font-normal w-full justify-start rounded-md"
+                    type="button"
+                >
+                    <span className="truncate">{label}</span>
+                    <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground ml-auto shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+                </Button>
+                {open && renderOptions()}
+            </div>
+        );
+    }
+
     return (
         <div ref={ref} className={`relative ${className || ""}`}>
             <Button
@@ -78,38 +135,8 @@ export function MultiSelect({
                 <ChevronDown className="w-3.5 h-3.5 text-muted-foreground ml-auto shrink-0" />
             </Button>
             {open && (
-                <div className="absolute top-full left-0 mt-1 z-[9999] w-full min-w-[200px] bg-popover border border-border rounded-lg shadow-lg p-1.5">
-                    <div className="relative mb-1.5">
-                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                        <Input
-                            ref={searchInputRef}
-                            placeholder={placeholder}
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="pl-7 h-8 text-sm"
-                        />
-                    </div>
-                    <label className="w-full flex items-center px-2.5 py-1.5 rounded-md text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={allSelected}
-                            ref={(el) => { if (el) el.indeterminate = someSelected; }}
-                            onChange={handleSelectAll}
-                            className="rounded accent-primary mr-2"
-                        />
-                        {allSelected ? "Unselect All" : "Select All"}
-                    </label>
-                    <div className="max-h-44 overflow-y-auto mt-1">
-                        {filtered.map((opt) => (
-                            <label key={opt} className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm hover:bg-secondary cursor-pointer">
-                                <input type="checkbox" checked={selected.includes(opt)} onChange={() => toggle(opt)} className="rounded accent-primary" />
-                                {getLabel(opt)}
-                            </label>
-                        ))}
-                        {filtered.length === 0 && (
-                            <p className="text-xs text-muted-foreground px-2 py-3 text-center">Tidak ada</p>
-                        )}
-                    </div>
+                <div className="absolute top-full left-0 mt-1 z-[9999] w-full min-w-[200px] bg-popover border border-border rounded-lg shadow-lg">
+                    {renderOptions()}
                 </div>
             )}
         </div>
