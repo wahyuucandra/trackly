@@ -19,48 +19,56 @@ export function AODashboardView() {
   const { programs, tasks, isLoading } = useAODashboard();
   const areaMap = useAreaMap();
 
+  // All hooks must be called before any conditional return (Rules of Hooks)
+  const derived = useMemo(() => {
+    if (isLoading || !user) {
+      return { myTasks: [] as typeof tasks, selesai: 0, pending: 0, berjalan: 0, myProgs: [] as typeof programs, calendarTasks: [] as { deadline: Date | null; name: string; programName: string; status: "belum" | "berjalan" | "menunggu" | "selesai" }[] };
+    }
+
+    const myTasks = tasks.filter((t) => {
+      const prog = programs.find((p) => p.id === t.programId);
+      if (!prog) return false;
+      const areas = (prog.jadwal || []).map((j) => j.area);
+      if (!areas.some((a) => (user.area || []).includes(a))) return false;
+      const pics = (t.pics || []).map((p) => p.userId);
+      return !pics.length || pics.includes(user.id || "");
+    });
+
+    const selesai = myTasks.filter((t) => (t.statuses || []).some((s) => s.userId === user.id && s.isApproved)).length;
+    const pending = myTasks.filter((t) => (t.statuses || []).some((s) => s.userId === user.id && s.isPendingApproval && !s.isApproved)).length;
+    const berjalan = myTasks.filter((t) => (t.statuses || []).some((s) => s.userId === user.id && s.status === "berjalan" && !s.isApproved)).length;
+    const myProgs = programs.filter((p) => myTasks.some((t) => t.programId === p.id));
+
+    const calendarTasks = myTasks.map((t) => {
+      const prog = programs.find((p) => p.id === t.programId);
+      const st = (t.statuses || []).find((s) => s.userId === user.id);
+      const isApproved = st?.isApproved ?? false;
+      const isPending = (st?.isPendingApproval && !isApproved) ?? false;
+      const status: "belum" | "berjalan" | "menunggu" | "selesai" = isApproved
+        ? "selesai"
+        : isPending
+          ? "menunggu"
+          : st?.status === "berjalan"
+            ? "berjalan"
+            : "belum";
+      return {
+        deadline: t.deadline,
+        name: t.name,
+        programName: prog?.name || "",
+        status,
+      };
+    });
+
+    return { myTasks, selesai, pending, berjalan, myProgs, calendarTasks };
+  }, [isLoading, user, tasks, programs]);
+
   if (isLoading) return <DashboardSkeleton />;
-  const myTasks = tasks.filter((t) => {
-    const prog = programs.find((p) => p.id === t.programId);
-    if (!prog) return false;
-    const areas = (prog.jadwal || []).map((j) => j.area);
-    if (!areas.some((a) => (user?.area || []).includes(a))) return false;
-    const pics = (t.pics || []).map((p) => p.userId);
-    return !pics.length || pics.includes(user?.id || "");
-  });
-  const selesai = myTasks.filter((t) => (t.statuses || []).some((s) => s.userId === user?.id && s.isApproved)).length;
-  const pending = myTasks.filter((t) => (t.statuses || []).some((s) => s.userId === user?.id && s.isPendingApproval && !s.isApproved)).length;
-  const berjalan = myTasks.filter((t) => (t.statuses || []).some((s) => s.userId === user?.id && s.status === "berjalan" && !s.isApproved)).length;
-  const myProgs = programs.filter((p) => myTasks.some((t) => t.programId === p.id));
+
+  const { myTasks, selesai, pending, berjalan, myProgs, calendarTasks } = derived;
 
   const handletoTask = (programId: string) => {
     router.push(`/tasks?expand=${programId}`);
   }
-
-  // Calendar data
-  const calendarTasks = useMemo(
-    () =>
-      myTasks.map((t) => {
-        const prog = programs.find((p) => p.id === t.programId);
-        const st = (t.statuses || []).find((s) => s.userId === user?.id);
-        const isApproved = st?.isApproved ?? false;
-        const isPending = (st?.isPendingApproval && !isApproved) ?? false;
-        const status: "belum" | "berjalan" | "menunggu" | "selesai" = isApproved
-          ? "selesai"
-          : isPending
-            ? "menunggu"
-            : st?.status === "berjalan"
-              ? "berjalan"
-              : "belum";
-        return {
-          deadline: t.deadline,
-          name: t.name,
-          programName: prog?.name || "",
-          status,
-        };
-      }),
-    [myTasks, programs, user?.id],
-  );
 
   return (
     <div className="space-y-8">
