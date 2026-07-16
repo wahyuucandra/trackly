@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge, DeadlineBadge } from "@/components/common";
-import { Check, Clock, X, ExternalLink, StickyNote, Edit, ChevronDown, ChevronUp } from "lucide-react";
-import type { Task } from "@/types";
+import { Check, Clock, X, ExternalLink, StickyNote, Edit, ChevronDown, ChevronUp, CheckCircle, XCircle } from "lucide-react";
+import type { Task, TaskStatusHistory, ApprovalLog } from "@/types";
 
 const STATUS_COLORS: Record<string, string> = {
   dibuat: "bg-slate-400",
@@ -19,7 +19,7 @@ const STATUS_LABELS: Record<string, string> = {
   dibuat: "Tugas dibuat oleh Admin",
   belum: "Belum dimulai",
   berjalan: "Sedang berjalan",
-  selesai: "Selesai",
+  selesai: "Menunggu Approval",
   disetujui: "Disetujui",
   ditolak: "Ditolak",
 };
@@ -36,8 +36,60 @@ export function TaskCard({ task, userId, isApproved, isPending, onUpdate }: Task
   const status = (task.statuses || []).find((s) => s.userId === userId);
   const [showHistory, setShowHistory] = useState(false);
 
-  // Filter history by this user
-  const myHistory = (task.statusHistory || []).filter((h) => h.userId === userId);
+  // Filter history by this user — exclude approval/rejection statuses (handled by approval events)
+  const myStatusHistory = (task.statusHistory || []).filter(
+    (h) => h.userId === userId && h.status !== "disetujui" && h.status !== "ditolak"
+  );
+
+  // Approval events for this user (approve/reject by admin)
+  const myApprovals = (task.approvals || []).filter((a) => a.userId === userId);
+
+  // Merge and sort by date DESC
+  const myHistory = useMemo(() => {
+    const items: Array<{
+      id: string;
+      date: string;
+      type: "submission" | "approval";
+      label: string;
+      notes: string | null;
+      evidenceUrl: string | null;
+      status: string;
+      action?: string;
+      adminName?: string;
+    }> = [];
+
+    myStatusHistory.forEach((h) => {
+      items.push({
+        id: h.id,
+        date: h.createdAt || "",
+        type: "submission",
+        label: STATUS_LABELS[h.status] || h.status,
+        notes: h.notes || null,
+        evidenceUrl: h.evidenceUrl || null,
+        status: h.status,
+      });
+    });
+
+    myApprovals.forEach((a) => {
+      const isApproved = a.action === "approve";
+      items.push({
+        id: a.id,
+        date: a.createdAt || "",
+        type: "approval",
+        label: isApproved
+          ? `${a.createdBy?.name || "Admin"} — Approve task`
+          : `${a.createdBy?.name || "Admin"} — Tolak task`,
+        notes: a.note || null,
+        evidenceUrl: null,
+        status: isApproved ? "disetujui" : "ditolak",
+        action: a.action,
+        adminName: a.createdBy?.name || "Admin",
+      });
+    });
+
+    items.sort((a, b) => b.date.localeCompare(a.date));
+    return items;
+  }, [myStatusHistory, myApprovals]);
 
   return (
     <div className="bg-card p-4 rounded-xl border border-border border-l-[3px] border-l-primary hover:shadow-sm transition-shadow">
@@ -112,16 +164,22 @@ export function TaskCard({ task, userId, isApproved, isPending, onUpdate }: Task
             <div className="mt-2 relative pl-4 border-l-2 border-border space-y-3">
               {myHistory.map((h, i) => (
                 <div key={h.id || i} className="relative">
-                  <div className={`absolute -left-[21px] top-0.5 w-2.5 h-2.5 rounded-full border-2 border-background ${STATUS_COLORS[h.status] || "bg-primary"}`} />
+                  <div className={`absolute -left-[21px] top-0.5 w-2.5 h-2.5 rounded-full border-2 border-background flex items-center justify-center ${h.type === "approval" ? (h.action === "approve" ? "bg-green-500" : "bg-red-500") : (STATUS_COLORS[h.status] || "bg-primary")}`}>
+                    {h.type === "approval" && (
+                      h.action === "approve"
+                        ? <CheckCircle className="w-2.5 h-2.5 text-white" />
+                        : <XCircle className="w-2.5 h-2.5 text-white" />
+                    )}
+                  </div>
                   <p className="text-[11px] text-muted-foreground">
-                    {h.createdAt
-                      ? new Date(h.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", timeZone: "Asia/Jakarta" }) +
+                    {h.date
+                      ? new Date(h.date).toLocaleDateString("id-ID", { day: "numeric", month: "short", timeZone: "Asia/Jakarta" }) +
                         " " +
-                        new Date(h.createdAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" })
+                        new Date(h.date).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" })
                       : "-"}
                   </p>
-                  <p className="text-xs font-medium">{STATUS_LABELS[h.status] || h.status}</p>
-                  {h.notes && <p className="text-[11px] text-muted-foreground">{h.notes}</p>}
+                  <p className="text-xs font-medium">{h.label}</p>
+                  {h.notes && <p className="text-[11px] text-muted-foreground">💬 {h.notes}</p>}
                   {h.evidenceUrl && (
                     <a href={h.evidenceUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] text-blue-600 hover:underline inline-flex items-center gap-1">
                       <ExternalLink className="w-3 h-3" /> Bukti

@@ -199,8 +199,8 @@ export default function ApprovalsPage() {
                               </div>
                               {/* Actions */}
                               <div className="flex items-center gap-1 shrink-0">
-                                {p.evidenceUrl && (
-                                  <a href={p.evidenceUrl} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors" title="Lihat Bukti">
+                                {p.task?.evidenceUrl && (
+                                  <a href={p.task.evidenceUrl} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors" title="Lihat Bukti">
                                     <ExternalLink className="w-4 h-4" />
                                   </a>
                                 )}
@@ -211,7 +211,7 @@ export default function ApprovalsPage() {
                                   onClick={() => setDetailModal({
                                     taskId: task.id, userId: p.userId, aoName,
                                     taskName: task.name, programName: pn, programType: program.type,
-                                    notes: p.notes || "", evidenceUrl: p.evidenceUrl || null, status: p.status || "belum",
+                                    notes: p.notes || "", evidenceUrl: p.task?.evidenceUrl || null, status: p.status || "belum",
                                   })}
                                 >
                                   <Check className="w-4 h-4 mr-1" /> Approve

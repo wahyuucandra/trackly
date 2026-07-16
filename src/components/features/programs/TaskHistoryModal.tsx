@@ -8,7 +8,7 @@ const STATUS_LABELS: Record<string, string> = {
   dibuat: "📝 Tugas dibuat",
   belum: "Belum dimulai",
   berjalan: "Sedang berjalan",
-  selesai: "Selesai",
+  selesai: "Menunggu Approval",
   disetujui: "✅ Disetujui",
   ditolak: "❌ Ditolak",
 };
@@ -43,8 +43,10 @@ export function TaskHistoryModal({ open, onOpenChange, task, userMap }: TaskHist
     events.push({
       type: "approval",
       date: a.createdAt || "",
-      label: isApproved ? `✅ Disetujui oleh ${byName}` : `❌ Ditolak oleh ${byName}`,
-      detail: `${aoName}${a.note ? ` — "${a.note}"` : ""}`,
+      label: isApproved ? `${byName} — Approve task` : `${byName} — Tolak task`,
+      detail: isApproved
+        ? (a.note ? `💬 ${a.note}` : `AO: ${aoName}`)
+        : (a.note ? `💬 ${a.note}` : `AO: ${aoName}`),
       icon: isApproved ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />,
       color: isApproved ? "text-green-600 bg-green-50" : "text-red-600 bg-red-50",
     });

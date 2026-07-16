@@ -9,7 +9,7 @@ export async function GET() {
   const pending = await prisma.taskStatus.findMany({
     where: { isPendingApproval: true, isApproved: false },
     include: {
-      task: { include: { program: { select: { id: true, name: true, type: true } } } },
+      task: { select: { id: true, name: true, evidenceUrl: true, program: { select: { id: true, name: true, type: true } } } },
       user: { select: { id: true, name: true, username: true } },
     },
   });
