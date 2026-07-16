@@ -22,7 +22,7 @@ export function AODashboardView() {
   // All hooks must be called before any conditional return (Rules of Hooks)
   const derived = useMemo(() => {
     if (isLoading || !user) {
-      return { myTasks: [] as typeof tasks, selesai: 0, pending: 0, berjalan: 0, myProgs: [] as typeof programs, calendarTasks: [] as { deadline: Date | null; name: string; programName: string; status: "belum" | "berjalan" | "menunggu" | "selesai" }[] };
+      return { myTasks: [] as typeof tasks, selesai: 0, pending: 0, berjalan: 0, myProgs: [] as typeof programs, calendarTasks: [] as { deadline: string; name: string; programName: string; status: "belum" | "berjalan" | "menunggu" | "selesai" }[] };
     }
 
     const myTasks = tasks.filter((t) => {
